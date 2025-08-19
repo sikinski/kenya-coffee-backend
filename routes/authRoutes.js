@@ -17,8 +17,8 @@ export default async function authRoutes(fastify) {
             200: {
                 type: "object",
                 properties: {
-                    accessToken: { type: "string", description: "JWT токен для доступа" },
-                    refreshToken: { type: "string", description: "JWT токен для обновления" }
+                    access_token: { type: "string", description: "JWT токен для доступа" },
+                    refresh_token: { type: "string", description: "JWT токен для обновления" }
                 }
             },
             401: { type: "object", properties: { error: { type: "string" } } },
@@ -42,8 +42,8 @@ export default async function authRoutes(fastify) {
             200: {
                 type: "object",
                 properties: {
-                    accessToken: { type: "string" },
-                    refreshToken: { type: "string" }
+                    access_token: { type: "string" },
+                    refresh_token: { type: "string" }
                 }
             },
             401: { type: "object", properties: { error: { type: "string" } } }

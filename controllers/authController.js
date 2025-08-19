@@ -1,6 +1,6 @@
 import prisma from "../config/db.js"; // твой Prisma клиент
 import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
-
+import bcrypt from "bcrypt";
 
 export const login = async (request, reply) => {
   const { username, password } = request.body;
@@ -19,5 +19,5 @@ export const login = async (request, reply) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  return { accessToken, refreshToken };
+  return { access_token: accessToken, refresh_token: refreshToken };
 };

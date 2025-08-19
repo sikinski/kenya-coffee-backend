@@ -7,7 +7,7 @@ dotenv.config();
 
 export const generateAccessToken = (user) => {
   return jwt.sign(
-    { id: user.id, role: user.role },
+    { id: user.id, role: user.role }, // <-- это payload
     process.env.ACCESS_SECRET,
     { expiresIn: "15m" }
   );
@@ -15,7 +15,7 @@ export const generateAccessToken = (user) => {
 
 export const generateRefreshToken = (user) => {
   return jwt.sign(
-    { id: user.id },
+    { id: user.id }, // <-- это payload
     process.env.REFRESH_SECRET,
     { expiresIn: "7d" }
   );
