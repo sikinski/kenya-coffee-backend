@@ -7,6 +7,7 @@ import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
 import cors from "@fastify/cors";
 import authPlugin from "./plugins/auth.js";
+import taskRoutes from "./routes/taskRoutes.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ await fastify.register(cors, {
 
 // Регистрируем роуты /auth, /refresh
 fastify.register(authRoutes);
+fastify.register(taskRoutes);
 
 const start = async () => {
     try {
