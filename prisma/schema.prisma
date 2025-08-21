@@ -25,3 +25,13 @@ model User {
   role      String   // "admin" или "user"
   createdAt DateTime @default(now())
 }
+
+model DailyTask {
+  id        Int      @id @default(autoincrement())
+  text      String   // текст задачи
+  date      DateTime // дата задачи, передаём при создании
+  done      Boolean  @default(false)
+  userId    Int?     // Знак ? в Prisma означает, что поле nullable, то есть может быть null. пока может быть пустым, позже можно сделать обязательным
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

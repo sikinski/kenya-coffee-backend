@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "seed": "node prisma/seed.js"
+    "seed:tasks": "node prisma/seed_tasks.js"
   },
   "keywords": [],
   "author": "",
