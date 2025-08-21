@@ -13,7 +13,10 @@ export const getTasks = async (request, reply) => {
 
   // Получаем все задачи на указанную дату
   const tasks = await prisma.dailyTask.findMany({
-    where: { date: queryDate }
+    where: { date: queryDate },
+    orderBy: {
+        createdAt: 'asc'  // asc — по возрастанию, desc — по убыванию
+    }
   });
 
   return reply.send({ date: queryDate.toISOString(), tasks });
@@ -41,10 +44,16 @@ export const updateTask = async (request, reply) => {
       data: {
         done,
         userId: request.user.id
-      }
-    });
+      },
+    })
 
-    return reply.status(200).send(updatedTask);
+    // Получаем username отдельно
+    const user = await prisma.user.findUnique({ where: { id: request.user.id } });
+
+    return reply.status(200).send({ 
+        ...updatedTask,
+        username: user.username
+    });
   } catch (err) {
     return reply.status(500).send({ error: "Ошибка обновления задачи" });
   }

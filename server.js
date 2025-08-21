@@ -36,8 +36,10 @@ await fastify.register(swaggerUI, {
 
 // Регаем корсы
 await fastify.register(cors, {
-    origin: ["http://localhost:3001"], // Разрешаем фронту
-    credentials: true // если нужны cookie/авторизация
+    origin: ["http://localhost:3001"], // твой фронт
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
+    allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
+    credentials: true
 });
 
 // Регистрируем роуты /auth, /refresh
