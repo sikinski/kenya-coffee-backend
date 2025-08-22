@@ -3,8 +3,6 @@
 import Fastify from "fastify";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
-import swagger from "@fastify/swagger";
-import swaggerUI from "@fastify/swagger-ui";
 import cors from "@fastify/cors";
 import authPlugin from "./plugins/auth.js";
 import taskRoutes from "./routes/taskRoutes.js";
@@ -14,25 +12,6 @@ dotenv.config();
 const fastify = Fastify({ logger: true });
 
 await fastify.register(authPlugin);
-// Регаем сваггер
-await fastify.register(swagger, {
-    swagger: {
-        info: {
-            title: "Coffee New Day API",
-            description: "API для кофейни New Day",
-            version: "1.0.0",
-        },
-    },
-});
-
-await fastify.register(swaggerUI, {
-    routePrefix: "/docs",
-    uiConfig: { docExpansion: "list" }, // none or full
-    staticCSP: true,
-    transformSpecification: (swaggerObject, request, reply) => {
-        return swaggerObject;
-    },
-});
 
 // Регаем корсы
 await fastify.register(cors, {

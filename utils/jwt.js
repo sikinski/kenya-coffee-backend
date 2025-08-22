@@ -6,17 +6,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const generateAccessToken = (user) => {
-  return jwt.sign(
-    { id: user.id, role: user.role }, // <-- это payload
-    process.env.ACCESS_SECRET,
-    { expiresIn: "15m" }
-  );
+    return jwt.sign(
+        { id: user.id, role: user.role }, // <-- это payload
+        process.env.ACCESS_SECRET,
+        { expiresIn: "15m" }
+    );
 };
 
 export const generateRefreshToken = (user) => {
-  return jwt.sign(
-    { id: user.id }, // <-- это payload
-    process.env.REFRESH_SECRET,
-    { expiresIn: "7d" }
-  );
+    return jwt.sign(
+        { id: user.id }, // <-- это payload
+        process.env.REFRESH_SECRET,
+        { expiresIn: "7d" }
+    );
 };
