@@ -23,11 +23,23 @@ export const getTasks = async (request, reply) => {
             }
         },
         orderBy: {
-            createdAt: 'asc'  // asc — по возрастанию, desc — по убыванию
+            createdAt: 'asc'
+        },
+        include: {
+            user: true  // <-- подтягиваем user
         }
     });
 
-    return reply.send({ date: date, tasks });
+    const response = tasks.map(task => ({
+        id: task.id,
+        text: task.text,
+        done: task.done,
+        username: task.user ? task.user.username : null, // вместо userId
+        date: task.date,
+        createdAt: task.createdAt
+    }));
+
+    return reply.send({ date: date, tasks: response });
 };
 
 // PUT /tasks/25 {done: false}
