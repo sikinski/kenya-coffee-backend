@@ -22,9 +22,10 @@ export const getTasks = async (request, reply) => {
                 lte: end
             }
         },
-        orderBy: {
-            createdAt: 'asc'
-        },
+        orderBy: [
+            { createdAt: 'asc' },
+            { id: 'asc' }  // добавляем вторичную сортировку
+        ],
         include: {
             user: true  // <-- подтягиваем user
         }
