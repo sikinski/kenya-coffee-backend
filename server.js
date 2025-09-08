@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import cors from "@fastify/cors";
 import authPlugin from "./plugins/auth.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import noteRoutes from "./routes/noteRoutes.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ await fastify.register(cors, {
 // Регистрируем роуты /auth, /refresh
 fastify.register(authRoutes);
 fastify.register(taskRoutes);
+fastify.register(noteRoutes)
 
 const start = async () => {
     try {

@@ -25,6 +25,7 @@ model User {
     role      String   // "admin" или "user"
     createdAt DateTime @default(now())
     daily_tasks DailyTask[] // <-- обратная связь
+    notes     Note[]    // 👈 добавили связь с заметками
 }
 
 model DailyTask {
@@ -36,4 +37,13 @@ model DailyTask {
     user      User?    @relation(fields: [userId], references: [id])  // <-- связь с User
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+}
+
+model Note {
+  id          Int      @id @default(autoincrement())
+  text        String
+  author_id   Int
+  author      User     @relation(fields: [author_id], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 }
