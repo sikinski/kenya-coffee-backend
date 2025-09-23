@@ -20,6 +20,7 @@ datasource db {
 
 model User {
     id        Int      @id @default(autoincrement())
+    name      String   @default("Имя пользователя")
     username  String   @unique
     password  String
     role      String   // "admin" или "user"

@@ -8,6 +8,7 @@ import authPlugin from "./plugins/auth.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ fastify.register(authRoutes);
 fastify.register(taskRoutes);
 fastify.register(noteRoutes)
 fastify.register(reportRoutes)
+fastify.register(userRoutes)
 
 const start = async () => {
     try {

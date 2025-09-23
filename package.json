@@ -8,6 +8,7 @@
         "start": "node server.js",
         "seed:tasks": "node prisma/seed_tasks.js",
         "seed:report": "node prisma/seed_report.js",
+        "seed:users": "node prisma/seed_users.js",
         "swagger": "node scripts/swagger.js"
     },
     "keywords": [],

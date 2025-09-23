@@ -19,5 +19,5 @@ export const login = async (request, reply) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    return { access_token: accessToken, refresh_token: refreshToken };
+    return { access_token: accessToken, refresh_token: refreshToken, user_name: user.name };
 };
