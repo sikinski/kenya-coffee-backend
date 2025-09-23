@@ -43,3 +43,36 @@ export const getReport = async (request, reply) => {
 
     return reply.send(response);
 };
+
+export const updateTodayReport = async (request, reply) => {
+    const { date } = request.query
+    const data = request.body
+
+    if (!date) {
+        reply.status(400).send('Пришлите дату')
+    }
+
+    const start = new Date(date + "T00:00:00.000Z");
+    const end = new Date(date + "T23:59:59.999Z");
+
+    // Находим первый отчет за эту дату
+    const report = await prisma.report.findFirst({
+        where: {
+            date: {
+                gte: start,
+                lte: end
+            }
+        }
+    });
+
+    if (!report) {
+        return reply.status(500).send('Не нашлось отчета за сегодня. Сиды сделали?')
+    }
+
+    const updatedReport = await prisma.report.update({
+        where: { id: report.id }, // В findFirst мы получили репорт, а значит, у нас есть id
+        data: data,
+    })
+
+    return reply.status(200).send(updatedReport);
+}
