@@ -5,7 +5,7 @@ export const getNotes = async (request, reply) => {
         const notes = await prisma.note.findMany({
             include: {
                 author: {
-                    select: { username: true }
+                    select: { name: true }
                 }
             },
             orderBy: { created_at: 'desc' }
@@ -14,7 +14,7 @@ export const getNotes = async (request, reply) => {
         // Подменим author_id на username
         const result = notes.map(({ author, ...note }) => ({
             ...note,
-            author_name: author.username
+            author_name: author.name
         }));
 
         return reply.send(result)
@@ -45,7 +45,7 @@ export const createNote = async (request, reply) => {
         return reply.status(201).send({
             id: note.id,
             text: note.text,
-            author_name: note.author.username,
+            name: note.author.name,
             created_at: note.created_at,
             updated_at: note.updated_at
         })
