@@ -7,3 +7,6 @@ services:
     ports:
       - "3000:3000"
     restart: always
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
