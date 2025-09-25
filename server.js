@@ -31,10 +31,13 @@ fastify.register(noteRoutes)
 fastify.register(reportRoutes)
 fastify.register(userRoutes)
 
+const HOST = process.env.HOST || 'localhost'
+const PORT = process.env.PORT || 3000
+
 const start = async () => {
     try {
-        await fastify.listen({ port: 3000 });
-        console.log("Сервер запущен на http://localhost:3000");
+        await fastify.listen({ port: PORT, host: HOST });
+        console.log(`Сервер запущен на http://${HOST}:${PORT}`);
     } catch (err) {
         fastify.log.error(err);
         process.exit(1);
