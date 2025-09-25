@@ -21,7 +21,7 @@ await fastify.register(authPlugin);
 
 // Регаем корсы
 await fastify.register(cors, {
-    origin: ["http://localhost:3001", `http://${HOST}:3001`], // твой фронт
+    origin: ["*"], // твой фронт
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
     allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
     credentials: true
