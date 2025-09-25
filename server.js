@@ -21,7 +21,7 @@ await fastify.register(authPlugin);
 
 // Регаем корсы
 await fastify.register(cors, {
-    origin: ["*"], // твой фронт
+    origin: process.env.FRONTEND_URL, // твой фронт
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
     allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
     credentials: true
