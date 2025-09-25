@@ -12,13 +12,16 @@ import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
 
+const HOST = process.env.HOST || 'localhost'
+const PORT = process.env.PORT || 3000
+
 const fastify = Fastify({ logger: true });
 
 await fastify.register(authPlugin);
 
 // Регаем корсы
 await fastify.register(cors, {
-    origin: ["http://localhost:3001"], // твой фронт
+    origin: ["http://localhost:3001", `http:${HOST}:3001`], // твой фронт
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
     allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
     credentials: true
@@ -31,8 +34,7 @@ fastify.register(noteRoutes)
 fastify.register(reportRoutes)
 fastify.register(userRoutes)
 
-const HOST = process.env.HOST || 'localhost'
-const PORT = process.env.PORT || 3000
+
 
 const start = async () => {
     try {
