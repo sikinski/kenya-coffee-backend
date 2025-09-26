@@ -25,7 +25,7 @@ export const getReport = async (request, reply) => {
     });
 
     if (!report) {
-        return reply.status(404).send({ message: `Отчет за ${date} не найден` });
+        return reply.status(200).send(null);
     }
 
     const response = {
