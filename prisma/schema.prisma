@@ -40,13 +40,14 @@ model Note {
     updated_at  DateTime @updatedAt
     topicId    Int?                               // связь с темой
     topic      NoteTopic? @relation(fields: [topicId], references: [id])
-    
 }
+
 model NoteTopic {
     id     Int     @id @default(autoincrement())
     name   String  // название темы
     color  String  // цвет (hex, rgb или tailwind-class — решим сами)
     notes  Note[]
+    created_at        DateTime @default(now())
 }
 
 model Report {

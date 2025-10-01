@@ -27,7 +27,7 @@ export const getNotes = async (request, reply) => {
 
 // ---------- POST /notes — создать заметку ---------- 
 export const createNote = async (request, reply) => {
-    const { text } = request.body
+    const { text, topicId } = request.body
 
     if (!text) {
         return reply.status(400), send({ error: 'Поле text обязательно' })
@@ -37,6 +37,7 @@ export const createNote = async (request, reply) => {
         const note = await prisma.note.create({
             data: {
                 text,
+                topicId,
                 author_id: request.user.id
             },
             include: { author: true }
@@ -45,6 +46,7 @@ export const createNote = async (request, reply) => {
         return reply.status(201).send({
             id: note.id,
             text: note.text,
+            topicId: note.topicId,
             name: note.author.name,
             created_at: note.created_at,
             updated_at: note.updated_at
@@ -143,7 +145,7 @@ export const getNoteTopics = async (request, reply) => {
             orderBy: { created_at: 'desc' }
         })
 
-        return reply.status(200).send(noteTopics)
+        return reply.status(200).send(noteTopics || [])
     } catch (err) {
         console.error(err)
         return reply.status(500).send({ error: 'Ошибка получения тем заметок' })
@@ -160,9 +162,9 @@ export const deleteNoteTopic = async (request, reply) => {
     try {
         const noteTopic = await prisma.noteTopic.findUnique({
             where: {
-                id: id,
-                include: { notes: true } // подтягиваем заметки, чтоб проверить, есть ли у темы связанные заметки.
-            }
+                id: Number(id),
+            },
+            include: { notes: true } // подтягиваем заметки, чтоб проверить, есть ли у темы связанные заметки.
         })
 
         if (!noteTopic) {
@@ -175,7 +177,7 @@ export const deleteNoteTopic = async (request, reply) => {
 
         await prisma.noteTopic.delete({
             where: {
-                id: id
+                id: Number(id)
             }
         })
 
