@@ -55,7 +55,7 @@ export const createNote = async (request, reply) => {
     }
 }
 
-// ---------- PUT /notes — обновить заметку ---------- 
+// ---------- PUT /notes ---------- 
 export const updateNote = async (request, reply) => {
     const { id } = request.params
     const { text } = request.body
@@ -89,7 +89,7 @@ export const updateNote = async (request, reply) => {
     }
 }
 
-// ---------- DELETE /notes — удалить заметку ---------- 
+// ---------- DELETE /notes ---------- 
 export const deleteNote = async (request, reply) => {
     const { id } = request.params
 
@@ -109,5 +109,80 @@ export const deleteNote = async (request, reply) => {
         return reply.send({ success: true })
     } catch (err) {
         reply.status(500).send({ error: 'Ошибка удаления записи' })
+    }
+}
+
+// ========================== NOTE TOPIC ========================== 
+// POST /note-topics
+export const createNoteTopic = async (request, reply) => {
+    const { name, color } = request.body;
+
+    if (!name || !color) {
+        return reply.status(400).send({ error: 'Все поля обязательны.' });
+    }
+
+    try {
+        const noteTopic = await prisma.noteTopic.create({
+            data: {
+                name,
+                color
+            }
+        });
+
+        return reply.status(201).send(noteTopic);
+    } catch (err) {
+        console.error(err);
+        return reply.status(500).send({ error: 'Ошибка создания топика' });
+    }
+}
+
+// GET /note-topics
+export const getNoteTopics = async (request, reply) => {
+    try {
+        const noteTopics = await prisma.noteTopic.findMany({
+            orderBy: { created_at: 'desc' }
+        })
+
+        return reply.status(200).send(noteTopics)
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка получения тем заметок' })
+    }
+}
+
+// DELETE /note-topics/:id
+export const deleteNoteTopic = async (request, reply) => {
+    const { id } = request.params
+
+    if (!id) {
+        return reply.status(400).send({ error: 'Параметр ID обязателен' })
+    }
+    try {
+        const noteTopic = await prisma.noteTopic.findUnique({
+            where: {
+                id: id,
+                include: { notes: true } // подтягиваем заметки, чтоб проверить, есть ли у темы связанные заметки.
+            }
+        })
+
+        if (!noteTopic) {
+            return reply.status(404).send({ error: 'Тема не найдена' })
+        }
+
+        if (noteTopic.notes.length > 0) {
+            return reply.status(400).send({ error: 'У темы есть заметки. Удалите привязанные заметки, чтоб удалить тему.' })
+        }
+
+        await prisma.noteTopic.delete({
+            where: {
+                id: id
+            }
+        })
+
+        return reply.status(200).send({ message: 'Тема успешно удалена' })
+
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: `Не удалось удалить тему заметки` })
     }
 }
