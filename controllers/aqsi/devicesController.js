@@ -5,7 +5,7 @@ export const getDevices = async (request, reply) => {
         const AQSI_URL = process.env.AQSI_URL
         const AQSI_KEY = process.env.AQSI_KEY
 
-        const response = await axios.get(`${AQSI_URL}/${AQSI_KEY}`, {
+        const response = await axios.get(`${AQSI_URL}/v3/Devices`, {
             headers: {
                 'x-client-key': `Application ${AQSI_KEY}`
             }

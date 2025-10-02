@@ -9,7 +9,7 @@ import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-// import aqsiRoutes from "./routes/aqsiRoutes.js";
+import aqsiRoutes from "./routes/aqsiRoutes.js";
 
 dotenv.config();
 
@@ -34,7 +34,7 @@ fastify.register(taskRoutes);
 fastify.register(noteRoutes)
 fastify.register(reportRoutes)
 fastify.register(userRoutes)
-// fastify.register(aqsiRoutes)
+fastify.register(aqsiRoutes)
 
 const start = async () => {
     try {
