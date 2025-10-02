@@ -1,15 +1,21 @@
 import prisma from '../config/db.js'
 
 export const getNotes = async (request, reply) => {
+    const { topics } = request.query
+
     try {
+        // Преобразуем строку '2,3,5' в массив чисел [2,3,5]
+        const topicIds = topics
+            ? topics.split(',').map(id => parseInt(id.trim(), 10)).filter(Boolean)
+            : null;
         const notes = await prisma.note.findMany({
+            where: topicIds ? { topicId: { in: topicIds } } : {},
             include: {
-                author: {
-                    select: { name: true }
-                }
+                author: { select: { name: true } },
+                topic: { select: { name: true, color: true } } // если нужно вернуть тему тоже
             },
             orderBy: { created_at: 'desc' }
-        })
+        });
 
         // Подменим author_id на username
         const result = notes.map(({ author, ...note }) => ({
