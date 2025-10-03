@@ -1,23 +1,33 @@
-import axios from 'axios'
-import qs from 'qs';
+import prisma from '../../config/db.js';
 
 export const getReceipts = async (request, reply) => {
-    const queryString = qs.stringify(request.query, { encode: true });
+    const { page, page_size } = request.query
 
     try {
-        const AQSI_URL = process.env.AQSI_URL
-        const AQSI_KEY = process.env.AQSI_KEY
+        // skip - считаем, сколько пропустить
+        // Если мы на странице page=3, а размер страницы page_size=10:
+        const skip = (Number(page) - 1) * Number(page_size); // сколько пропустить
+        const take = Number(page_size); // сколько взять
+        const [receipts, total] = await Promise.all([
+            prisma.receipt.findMany({
+                skip, // сколько пропустить
+                take, // сколько взять
+                orderBy: { processedAt: 'desc' } // сортировка: сначала свежие
+            }),
+            prisma.receipt.count()
+        ]);
 
-
-        const response = await axios.get(`${AQSI_URL}/v2/Receipts?${queryString}`, {
-            headers: {
-                'x-client-key': `Application ${AQSI_KEY}`
+        return reply.status(200).send({
+            receipts: receipts || [],
+            pagination: {
+                page: Number(page),
+                page_size: Number(page_size),
+                total: total
             }
-        })
 
-        return reply.status(200).send(response.data)
+        })
     } catch (err) {
-        console.error(err.response)
-        return reply.status(500).send("Ошибка при обращении к Aqsi:", err?.response?.data || err?.response?.status || err.message)
+        console.error(err)
+        return reply.status(500).send('Не удалось получить чеки')
     }
 }

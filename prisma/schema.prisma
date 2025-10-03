@@ -63,3 +63,17 @@ model Report {
     created_at        DateTime @default(now())
     updated_at        DateTime @updatedAt
 }
+
+model Receipt {
+  id                 String   @id
+  cashier_name       String
+  discount           String?
+  type               Int?
+  customerInfo       Json?
+  positions          Json?
+  amount             Decimal
+  calculationAddress String
+  processedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
