@@ -11,7 +11,6 @@ import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
 import { seedAllReceipts } from './controllers/aqsi/initPayments.js';
-import { uploadReceipts } from "./controllers/aqsi/uploadReceipts.js";
 
 
 dotenv.config();
@@ -39,8 +38,8 @@ fastify.register(reportRoutes)
 fastify.register(userRoutes)
 fastify.register(aqsiRoutes)
 
-seedAllReceipts() // Наполняет базу чеками за последние 3 мес., если база чеков пуста
-// uploadReceipts() // Делает запрос каждые 30 сек. в aqsi, чтоб получать свежие чеки 
+await seedAllReceipts() // Наполняет базу чеками за последние 2 мес., если база чеков пуста и вызывает функцию, которая выполняется раз в 30 сек, которая проверяет новые чеки. 
+
 
 const start = async () => {
     try {
@@ -52,5 +51,4 @@ const start = async () => {
     }
 };
 
-start();
-
+await start();

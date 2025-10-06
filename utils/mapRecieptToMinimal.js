@@ -14,6 +14,6 @@ export function mapRowToMinimal(row) {
         positions: row.content?.positions || [],
         amount: row.amount,
         calculationAddress: row.calculationAddress || row.content?.settlementAddress || '',
-        processedAt: row.processedAt ? new Date(row.processedAt) : null,
+        processedAt: row.processedAt,
     };
 }

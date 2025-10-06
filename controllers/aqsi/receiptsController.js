@@ -12,7 +12,7 @@ export const getReceipts = async (request, reply) => {
             prisma.receipt.findMany({
                 skip, // сколько пропустить
                 take, // сколько взять
-                orderBy: { processedAt: 'desc' } // сортировка: сначала свежие
+                // orderBy: { processedAt: 'desc' } // сортировка: сначала свежие
             }),
             prisma.receipt.count()
         ]);

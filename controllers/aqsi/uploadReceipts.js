@@ -1,21 +1,18 @@
 import axios from 'axios';
 import prisma from '../../config/db.js';
 import { mapRowToMinimal } from '../../utils/mapRecieptToMinimal.js';
+import { seedAllReceipts } from './initPayments.js';
 
 export async function uploadReceipts() {
-    const latestReceipt = await prisma.receipt.findFirst({
-        orderBy: [
-            { processedAt: 'desc' },
-            { createdAt: 'desc' },
-        ],
-    });
-
     const AQSI_URL = process.env.AQSI_URL;
     const AQSI_KEY = process.env.AQSI_KEY;
 
     // 1️⃣ Находим последнюю дату чека
     const lastReceipt = await prisma.receipt.findFirst({
-        orderBy: { processedAt: 'desc' },
+        orderBy: [
+            { processedAt: 'desc' },
+            { createdAt: 'desc' },
+        ],
     });
 
     const pad = (n) => n.toString().padStart(2, '0');
@@ -25,11 +22,9 @@ export async function uploadReceipts() {
         const d = lastReceipt.processedAt;
         beginDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     } else {
-        // если чеков нет, берём 3 месяца назад
-        const now = new Date();
-        const threeMonthsAgo = new Date(now);
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-        beginDate = `${threeMonthsAgo.getFullYear()}-${pad(threeMonthsAgo.getMonth() + 1)}-${pad(threeMonthsAgo.getDate())}T${pad(threeMonthsAgo.getHours())}:${pad(threeMonthsAgo.getMinutes())}:${pad(threeMonthsAgo.getSeconds())}`;
+        // если чеков нет
+        await seedAllReceipts()
+        return;
     }
 
     // 2️⃣ Запрос к Aqsi
@@ -60,7 +55,3 @@ export async function uploadReceipts() {
     }
 }
 
-// 3️⃣ Запуск каждые 30 секунд
-setInterval(() => {
-    uploadReceipts();
-}, 30 * 1000);
