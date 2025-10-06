@@ -79,7 +79,8 @@ model Receipt {
 }
 
 model NativeReceipt {
-  id        String   @id @default(cuid())
-  raw       Json
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  raw          Json
+  processedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
 }
