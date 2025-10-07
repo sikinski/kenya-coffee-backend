@@ -80,6 +80,7 @@ model Receipt {
 
 model NativeReceipt {
   id           String   @id @default(cuid())
+  aqsiId       String?   @unique
   raw          Json
   processedAt  DateTime @default(now())
   createdAt    DateTime @default(now())

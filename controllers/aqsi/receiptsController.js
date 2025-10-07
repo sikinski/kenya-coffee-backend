@@ -8,14 +8,16 @@ export const getReceipts = async (request, reply) => {
         // Если мы на странице page=3, а размер страницы page_size=10:
         const skip = (Number(page) - 1) * Number(page_size); // сколько пропустить
         const take = Number(page_size); // сколько взять
+
         const [receipts, total] = await Promise.all([
-            prisma.receipt.findMany({
+            prisma.nativeReceipt.findMany({
                 skip, // сколько пропустить
                 take, // сколько взять
-                // orderBy: { processedAt: 'desc' } // сортировка: сначала свежие
+                orderBy: { processedAt: 'desc' },
             }),
             prisma.receipt.count()
         ]);
+
 
         return reply.status(200).send({
             receipts: receipts || [],
