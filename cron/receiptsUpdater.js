@@ -17,13 +17,22 @@ cron.schedule('* * * * *', async () => {
         orderBy: { processedAt: 'desc' },
     })
     if (last) {
-        // +1 секунда, чтобы не брать дубликат
-        currentBeginDate = new Date(last.processedAt.getTime() + 1000);
+        const lastDate = new Date(last.processedAt);
+
+        // Берём день последнего чека, обнуляем время
+        lastDate.setUTCHours(0, 0, 0, 0);
+
+        // Минус 5 часов для страховки
+        currentBeginDate = new Date(lastDate.getTime() - 5 * 60 * 60 * 1000);
     } else {
-        // если чеков нет, берём последние 2 месяца
+        // Если чеков нет, берём последние 2 месяца
         const twoMonthsMs = 2 * 30 * 24 * 60 * 60 * 1000;
         currentBeginDate = new Date(currentEndDate.getTime() - twoMonthsMs);
     }
+
+    console.log('currentBeginDate:', currentBeginDate.toISOString());
+    console.log('currentEndDate:', currentEndDate.toISOString());
+
 
     try {
         loadReceiptsForPeriod(currentBeginDate, currentEndDate)

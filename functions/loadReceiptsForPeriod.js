@@ -56,6 +56,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         console.log(`Загружена страница ${page}, новых чеков: ${newReceipts.length}`)
 
         if (data.pages && page >= data.pages) break
+        if (!newReceipts?.length) break;
         page++
     }
 
