@@ -3,21 +3,27 @@ import { loadReceiptsForPeriod } from '../functions/loadReceiptsForPeriod.js';
 import prisma from '../config/db.js'
 
 cron.schedule('* * * * *', async () => {
-    console.log('🔄 Обновляем чеки Aqsi...')
+    console.log('🔄 Обновляем чеки Aqsi...', new Date().toISOString());
 
     // ====== DATE
     let currentEndDate = new Date();
     let currentBeginDate;
-    const twoMonthsMs = 2 * 30 * 24 * 60 * 60 * 1000;
 
     currentEndDate.setDate(currentEndDate.getDate() + 1);
     currentEndDate.setHours(23, 59, 59, 999);
+    // ======
 
     const last = await prisma.nativeReceipt.findFirst({
         orderBy: { processedAt: 'desc' },
     })
-    currentBeginDate = last ? last.processedAt : new Date(currentEndDate.getTime() - twoMonthsMs);
-    // ======
+    if (last) {
+        // +1 секунда, чтобы не брать дубликат
+        currentBeginDate = new Date(last.processedAt.getTime() + 1000);
+    } else {
+        // если чеков нет, берём последние 2 месяца
+        const twoMonthsMs = 2 * 30 * 24 * 60 * 60 * 1000;
+        currentBeginDate = new Date(currentEndDate.getTime() - twoMonthsMs);
+    }
 
     try {
         loadReceiptsForPeriod(currentBeginDate, currentEndDate)
