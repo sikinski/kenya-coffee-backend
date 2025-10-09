@@ -33,7 +33,7 @@ async function updateDailyTasks() {
 
 // ===== Cron задача для ежедневного обновления =====
 // Челябинск = UTC+5 → 00:00 по Челябинску = 19:00 UTC
-cron.schedule('0 19 * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
     console.log('🕛 Обновляем задачи на сегодня (00:00 Челябинск)')
     try {
         await updateDailyTasks()
@@ -42,4 +42,6 @@ cron.schedule('0 19 * * *', async () => {
     } finally {
         await prisma.$disconnect()
     }
+}, {
+    timezone: "Asia/Yekaterinburg" // <-- Челябинск/Екатеринбург (UTC+5)
 })
