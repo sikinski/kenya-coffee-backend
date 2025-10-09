@@ -5,11 +5,11 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     const AQSI_URL = process.env.AQSI_URL
     const AQSI_KEY = process.env.AQSI_KEY
 
-    let page = 1
+    let page = 0
     let hasReceipts = false
 
     while (true) {
-        const queryString = `?page=${page}&pageSize=10&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
+        const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
         console.log('>>> AQSI запрос:', queryString)
 

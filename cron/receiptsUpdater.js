@@ -9,7 +9,7 @@ cron.schedule('* * * * *', async () => {
     let currentEndDate = new Date();
     let currentBeginDate;
 
-    currentEndDate.setDate(currentEndDate.getDate() + 1);
+    currentEndDate.setDate(currentEndDate.getDate() + 2); // сегодня + 2 дня
     currentEndDate.setHours(23, 59, 59, 999);
     // ======
 
