@@ -15,7 +15,6 @@ import './cron/everydayReport.js'
 import './cron/everydayTasks.js'
 
 dotenv.config();
-await prisma.nativeReceipt.deleteMany()
 
 const HOST = process.env.HOST || 'localhost'
 const PORT = process.env.PORT || 3000

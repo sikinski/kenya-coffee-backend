@@ -1,6 +1,0 @@
--- AlterTable
-ALTER TABLE "public"."Report" ALTER COLUMN "cash" DROP NOT NULL,
-ALTER COLUMN "non_cash" DROP NOT NULL,
-ALTER COLUMN "total" DROP NOT NULL,
-ALTER COLUMN "number_purchases" DROP NOT NULL,
-ALTER COLUMN "cash_register" DROP NOT NULL;
