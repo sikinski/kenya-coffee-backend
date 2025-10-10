@@ -35,12 +35,14 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
                     console.log(r.processedAt);
-                    console.log(dateWithoutTZ(tz.processedAt));
+                    let test = dateWithoutTZ(new Date(r.processedAt))
+                    console.log(test);
+
 
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: dateWithoutTZ(tz.processedAt),
+                        processedAt: test
                     }
                 }),
             })
@@ -59,10 +61,15 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     return hasReceipts
 }
 
-export function dateWithoutTZ(isoString) {
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute, second] = timePart.split(':').map(Number);
+function dateWithoutTZ(date) {
+    console.log(typeof date);
 
-    return new Date(year, month - 1, day, hour, minute, second);
+    return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds()
+    );
 }

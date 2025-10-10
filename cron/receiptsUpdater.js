@@ -58,10 +58,6 @@ cron.schedule('* * * * *', async () => {
         currentBeginDate = new Date(currentEndDate.getTime() - twoMonthsMs);
     }
 
-    console.log('currentBeginDate:', currentBeginDate.toISOString());
-    console.log('currentEndDate:', currentEndDate.toISOString());
-
-
     try {
         loadReceiptsForPeriod(currentBeginDate, currentEndDate)
     } catch (err) {

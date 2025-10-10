@@ -12,8 +12,6 @@ export const getTasks = async (request, reply) => {
     const start = new Date(date + "T00:00:00.000Z");
     const end = new Date(date + "T23:59:59.999Z");
 
-    console.log(start, end);
-
     // Получаем все задачи на указанную дату
     const tasks = await prisma.dailyTask.findMany({
         where: {
