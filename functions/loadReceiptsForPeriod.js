@@ -32,20 +32,21 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
                     // === Обработка processedAt ===
-                    let processedAtDate
+                    const tz = 'Asia/Yekaterinburg';
+                    // let processedAtDate
 
-                    if (r.processedAt.endsWith('Z') || r.processedAt.includes('+') || r.processedAt.includes('-')) {
-                        // Если строка уже с таймзоной, JS корректно распарсит
-                        processedAtDate = new Date(r.processedAt)
-                    } else {
-                        // Если без таймзоны — считаем как UTC
-                        processedAtDate = new Date(r.processedAt + 'Z')
-                    }
+                    // if (r.processedAt.endsWith('Z') || r.processedAt.includes('+') || r.processedAt.includes('-')) {
+                    //     // Если строка уже с таймзоной, JS корректно распарсит
+                    //     processedAtDate = new Date(r.processedAt).toLocaleString('ru-RU', { timeZone: tz })
+                    // } else {
+                    //     // Если без таймзоны — считаем как UTC
+                    //     processedAtDate = new Date(r.processedAt + 'Z').toLocaleString('ru-RU', { timeZone: tz })
+                    // }
 
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: processedAtDate,
+                        processedAt: new Date(r.processedAt).toLocaleString('ru-RU', { timeZone: tz }),
                     }
                 }),
             })
