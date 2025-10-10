@@ -41,7 +41,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
                         processedAt: new Date(r.processedAt),
-                        processedAtRaw: r.processedAt,
+                        // processedAtRaw: r.processedAt,
 
                     }
                 }),
