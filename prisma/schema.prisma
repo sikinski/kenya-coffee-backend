@@ -83,7 +83,7 @@ model NativeReceipt {
   aqsiId       String?   @unique
   raw          Json
   processedAt  DateTime @db.Timestamp(6)
-  processedAtRaw    String
+  processedAtRaw    String?
   createdAt    DateTime @default(now())
 }
 
