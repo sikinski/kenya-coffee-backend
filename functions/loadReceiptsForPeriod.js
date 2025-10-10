@@ -9,7 +9,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let hasReceipts = false
 
     await prisma.nativeReceipt.deleteMany()
-    const tz = 'Asia/Yekaterinburg';
 
     while (true) {
         const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
@@ -35,14 +34,12 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
                     console.log(r.processedAt);
-                    let test = dateWithoutTZ(r.processedAt)
-                    console.log(test);
 
 
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: test
+                        processedAt: new Date(r.processedAt)
                     }
                 }),
             })
@@ -54,24 +51,8 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
         if (data.pages && page >= data.pages) break
         if (!newReceipts?.length) break;
-        if (page > 5) break;
         page++
     }
 
     return hasReceipts
-}
-
-function dateWithoutTZ(dateIso) {
-    const isoString = dateIso;
-
-    // Разбиваем строку на части: год, месяц, день, часы, минуты, секунды
-    const [year, month, day, hour, minute, second] = isoString
-        .replace('Z', '')          // убираем Z, чтобы не мешало
-        .split(/[-T:.]/)          // разделяем по -, T, :, .
-        .map(Number);
-
-    // Создаём объект Date с теми же числами
-    // Используем конструктор new Date(year, monthIndex, day, hour, minute, second)
-    return new Date(year, month - 1, day, hour, minute, second);
-
 }
