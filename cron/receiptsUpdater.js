@@ -9,7 +9,7 @@ let currentEndDate = new Date();
 currentEndDate.setDate(currentEndDate.getDate() + 2); // сегодня + 2 дня
 currentEndDate.setHours(23, 59, 59, 999);
 
-let currentBeginDate: Date;
+let currentBeginDate;
 
 // Берём последнюю запись
 const last = await prisma.nativeReceipt.findFirst({
@@ -42,7 +42,7 @@ cron.schedule('* * * * *', async () => {
     currentEndDate.setDate(currentEndDate.getDate() + 2);
     currentEndDate.setHours(23, 59, 59, 999);
 
-    let currentBeginDate: Date;
+    let currentBeginDate;
 
     const last = await prisma.nativeReceipt.findFirst({
         orderBy: { processedAt: 'desc' },
