@@ -9,56 +9,56 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let hasReceipts = false
 
     await prisma.nativeReceipt.deleteMany()
-    const tz = 'Asia/Yekaterinburg';
+    // const tz = 'Asia/Yekaterinburg';
 
-    while (true) {
-        const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
+    // while (true) {
+    //     const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
-        console.log('>>> AQSI запрос:', queryString)
+    //     console.log('>>> AQSI запрос:', queryString)
 
-        const response = await axios.get(`${AQSI_URL}/v2/Receipts${queryString}`, {
-            headers: { 'x-client-key': `Application ${AQSI_KEY}` }
-        })
+    //     const response = await axios.get(`${AQSI_URL}/v2/Receipts${queryString}`, {
+    //         headers: { 'x-client-key': `Application ${AQSI_KEY}` }
+    //     })
 
-        const data = response.data
-        if (!data.rows || data.rows.length === 0) break
+    //     const data = response.data
+    //     if (!data.rows || data.rows.length === 0) break
 
-        // Проверим, какие ID уже есть
-        const existing = await prisma.nativeReceipt.findMany({
-            where: { id: { in: data.rows.map(r => r.id) } },
-            select: { id: true }
-        })
-        const existingIds = new Set(existing.map(r => r.id))
-        const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
+    //     // Проверим, какие ID уже есть
+    //     const existing = await prisma.nativeReceipt.findMany({
+    //         where: { id: { in: data.rows.map(r => r.id) } },
+    //         select: { id: true }
+    //     })
+    //     const existingIds = new Set(existing.map(r => r.id))
+    //     const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
 
-        if (newReceipts.length > 0) {
-            await prisma.nativeReceipt.createMany({
-                data: newReceipts.map(r => {
-                    console.log(r.processedAt);
-                    let test = dateWithoutTZ(new Date(r.processedAt))
-                    console.log(test);
+    //     if (newReceipts.length > 0) {
+    //         await prisma.nativeReceipt.createMany({
+    //             data: newReceipts.map(r => {
+    //                 console.log(r.processedAt);
+    //                 let test = dateWithoutTZ(new Date(r.processedAt))
+    //                 console.log(test);
 
 
-                    return {
-                        id: r.id, // сохраняем настоящий id от Aqsi
-                        raw: r,
-                        processedAt: test
-                    }
-                }),
-            })
+    //                 return {
+    //                     id: r.id, // сохраняем настоящий id от Aqsi
+    //                     raw: r,
+    //                     processedAt: test
+    //                 }
+    //             }),
+    //         })
 
-            hasReceipts = true
-        }
+    //         hasReceipts = true
+    //     }
 
-        console.log(`Загружена страница ${page}, новых чеков: ${newReceipts.length}`)
+    //     console.log(`Загружена страница ${page}, новых чеков: ${newReceipts.length}`)
 
-        if (data.pages && page >= data.pages) break
-        if (!newReceipts?.length) break;
-        if (page > 5) break;
-        page++
-    }
+    //     if (data.pages && page >= data.pages) break
+    //     if (!newReceipts?.length) break;
+    //     if (page > 5) break;
+    //     page++
+    // }
 
-    return hasReceipts
+    // return hasReceipts
 }
 
 function dateWithoutTZ(date) {
