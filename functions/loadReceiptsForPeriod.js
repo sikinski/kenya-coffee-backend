@@ -8,6 +8,9 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let page = 0
     let hasReceipts = false
 
+    await prisma.nativeReceipt.deleteMany()
+    const tz = 'Asia/Yekaterinburg';
+
     while (true) {
         const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
@@ -31,30 +34,11 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         if (newReceipts.length > 0) {
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
-                    // === Обработка processedAt ===
-                    const tz = 'Asia/Yekaterinburg';
-                    // let processedAtDate
-
-                    // if (r.processedAt.endsWith('Z') || r.processedAt.includes('+') || r.processedAt.includes('-')) {
-                    //     // Если строка уже с таймзоной, JS корректно распарсит
-                    //     processedAtDate = new Date(r.processedAt).toLocaleDateString('ru-RU', { timeZone: tz })
-                    // } else {
-                    //     // Если без таймзоны — считаем как UTC
-                    //     processedAtDate = new Date(r.processedAt + 'Z').toLocaleDateString('ru-RU', { timeZone: tz })
-                    // }
-
-                    console.log(`1: ${convertDateToUTC(r.processedAt).toLocaleDateString('ru-RU', { timeZone: tz })}`);
-                    console.log(`2: ${new Date(r.processedAt + 'Z').toLocaleDateString('ru-RU', { timeZone: tz })}`);
-                    console.log(`3: ${r.processedAt}`);
-                    console.log(`2: `);
-                    console.log(`2: `);
-                    console.log(`2: `);
-
-
+                    console.log(r.processedAt);
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: r.processedAt
+                        processedAt: new Date(r.processedAt),
                     }
                 }),
             })
@@ -66,12 +50,9 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
         if (data.pages && page >= data.pages) break
         if (!newReceipts?.length) break;
+        if (page > 5) break;
         page++
     }
 
     return hasReceipts
-}
-
-function convertDateToUTC(date) {
-    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
 }
