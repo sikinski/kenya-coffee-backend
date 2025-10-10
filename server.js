@@ -10,7 +10,7 @@ import noteRoutes from "./routes/noteRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
-import './cron/receiptsUpdater.js'
+// import './cron/receiptsUpdater.js'
 import './cron/everydayReport.js'
 import './cron/everydayTasks.js'
 
