@@ -9,6 +9,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let hasReceipts = false
 
     await prisma.nativeReceipt.deleteMany()
+    const tz = 'Asia/Yekaterinburg';
 
     while (true) {
         const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
@@ -27,6 +28,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
             where: { id: { in: data.rows.map(r => r.id) } },
             select: { id: true }
         })
+
         const existingIds = new Set(existing.map(r => r.id))
         const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
 
@@ -35,11 +37,12 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
                 data: newReceipts.map(r => {
                     console.log(r.processedAt);
 
-
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: new Date(r.processedAt)
+                        processedAt: new Date(r.processedAt),
+                        processedAtRaw: r.processedAt,
+
                     }
                 }),
             })
@@ -51,8 +54,10 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
         if (data.pages && page >= data.pages) break
         if (!newReceipts?.length) break;
+        if (page > 5) break;
         page++
     }
 
     return hasReceipts
 }
+
