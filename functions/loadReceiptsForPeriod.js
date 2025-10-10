@@ -9,7 +9,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let hasReceipts = false
 
     await prisma.nativeReceipt.deleteMany()
-    const tz = 'Asia/Yekaterinburg';
 
     while (true) {
         const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
@@ -34,13 +33,11 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         if (newReceipts.length > 0) {
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
-                    console.log(r.processedAt);
-                    console.log(dateWithoutTZ(r.processedAt));
 
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: dateWithoutTZ(r.processedAt),
+                        processedAt: r.processedAt,
                     }
                 }),
             })
@@ -57,12 +54,4 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     }
 
     return hasReceipts
-}
-
-export function dateWithoutTZ(isoString) {
-    const [datePart, timePart] = isoString.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute, second] = timePart.split(':').map(Number);
-
-    return new Date(year, month - 1, day, hour, minute, second);
 }
