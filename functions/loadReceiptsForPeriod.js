@@ -37,16 +37,24 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
                     // if (r.processedAt.endsWith('Z') || r.processedAt.includes('+') || r.processedAt.includes('-')) {
                     //     // Если строка уже с таймзоной, JS корректно распарсит
-                    //     processedAtDate = new Date(r.processedAt).toLocaleString('ru-RU', { timeZone: tz })
+                    //     processedAtDate = new Date(r.processedAt).toLocaleDateString('ru-RU', { timeZone: tz })
                     // } else {
                     //     // Если без таймзоны — считаем как UTC
-                    //     processedAtDate = new Date(r.processedAt + 'Z').toLocaleString('ru-RU', { timeZone: tz })
+                    //     processedAtDate = new Date(r.processedAt + 'Z').toLocaleDateString('ru-RU', { timeZone: tz })
                     // }
+
+                    console.log(`1: ${convertDateToUTC(r.processedAt).toLocaleDateString('ru-RU', { timeZone: tz })}`);
+                    console.log(`2: ${new Date(r.processedAt + 'Z').toLocaleDateString('ru-RU', { timeZone: tz })}`);
+                    console.log(`3: ${r.processedAt}`);
+                    console.log(`2: `);
+                    console.log(`2: `);
+                    console.log(`2: `);
+
 
                     return {
                         id: r.id, // сохраняем настоящий id от Aqsi
                         raw: r,
-                        processedAt: new Date(r.processedAt).toLocaleString('ru-RU', { timeZone: tz }),
+                        processedAt: r.processedAt
                     }
                 }),
             })
@@ -62,4 +70,8 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     }
 
     return hasReceipts
+}
+
+function convertDateToUTC(date) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
 }
