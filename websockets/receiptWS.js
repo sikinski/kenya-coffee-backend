@@ -13,7 +13,7 @@ export function setupReceiptWS(server) {
 
     receiptWSS.on('connection', (ws) => {
         console.log('⚡ Клиент подключился к WS чеков')
-
+        ws.send(JSON.stringify({ type: 'connected' }));
         ws.on('close', () => {
             console.log('❌ Клиент отключился от WS чеков')
         })
@@ -21,7 +21,7 @@ export function setupReceiptWS(server) {
 }
 
 // Функция для отправки новых чеков всем клиентам
-export function sendSockerReceipt(receipts) {
+export function sendSocketReceipt(receipts) {
     console.log('Sending receipts:', receipts); // <- проверь тут
     const data = JSON.stringify({ type: 'new_receipts', payload: receipts })
     receiptWSS.clients.forEach(client => {

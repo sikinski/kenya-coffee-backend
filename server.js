@@ -14,6 +14,7 @@ import './cron/receiptsUpdater.js'
 import './cron/everydayReport.js'
 import './cron/everydayTasks.js'
 
+
 import { setupReceiptWS } from "./websockets/receiptWS.js";
 
 dotenv.config();

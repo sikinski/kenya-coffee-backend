@@ -1,6 +1,6 @@
 import axios from 'axios'
 import prisma from '../config/db.js'
-import { sendSockerReceipt } from '../websockets/receiptWS.js';
+import { sendSocketReceipt } from '../websockets/receiptWS.js';
 
 export async function loadReceiptsForPeriod(beginDate, endDate) {
     const AQSI_URL = process.env.AQSI_URL
@@ -49,7 +49,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
                 }),
             })
 
-            await sendSockerReceipt(newReceipts)
+            sendSocketReceipt(newReceipts)
             hasReceipts = true
 
         }
