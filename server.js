@@ -14,6 +14,8 @@ import './cron/receiptsUpdater.js'
 import './cron/everydayReport.js'
 import './cron/everydayTasks.js'
 
+import { setupReceiptWS } from "./websockets/receiptWS.js";
+
 dotenv.config();
 
 const HOST = process.env.HOST || 'localhost'
@@ -43,11 +45,16 @@ fastify.register(aqsiRoutes)
 const start = async () => {
     try {
         await fastify.listen({ port: PORT, host: HOST });
+
+        // Передаем внутренний Node-сервер в WS
+        setupReceiptWS(fastify.server);
+
         console.log(`Сервер запущен на http://${HOST}:${PORT}`);
     } catch (err) {
         fastify.log.error(err);
         process.exit(1);
     }
 };
+
 
 await start();

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import prisma from '../config/db.js'
+import { sendSockerReceipt } from '../websockets/receiptWS.js';
 
 export async function loadReceiptsForPeriod(beginDate, endDate) {
     const AQSI_URL = process.env.AQSI_URL
@@ -8,7 +9,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let page = 0
     let hasReceipts = false
 
-    await prisma.nativeReceipt.deleteMany()
     const tz = 'Asia/Yekaterinburg';
 
     while (true) {
@@ -33,6 +33,8 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
 
         if (newReceipts.length > 0) {
+            console.log('Have new receipts');
+
             await prisma.nativeReceipt.createMany({
                 data: newReceipts.map(r => {
                     console.log(r.processedAt);
@@ -47,7 +49,9 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
                 }),
             })
 
+            await sendSockerReceipt(newReceipts)
             hasReceipts = true
+
         }
 
         console.log(`Загружена страница ${page}, новых чеков: ${newReceipts.length}`)
