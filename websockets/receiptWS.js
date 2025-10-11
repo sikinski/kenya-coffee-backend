@@ -22,6 +22,7 @@ export function setupReceiptWS(server) {
 
 // Функция для отправки новых чеков всем клиентам
 export function sendSockerReceipt(receipts) {
+    console.log('Sending receipts:', receipts); // <- проверь тут
     const data = JSON.stringify({ type: 'new_receipts', payload: receipts })
     receiptWSS.clients.forEach(client => {
         console.log(client);
