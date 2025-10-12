@@ -35,21 +35,21 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         if (newReceipts.length > 0) {
             console.log('Have new receipts');
 
-            await prisma.nativeReceipt.createMany({
-                data: newReceipts.map(r => {
-                    console.log(r.processedAt);
+            const savingData = newReceipts.map(r => {
+                return {
+                    id: r.id, // сохраняем настоящий id от Aqsi
+                    raw: r,
+                    processedAt: new Date(r.processedAt),
+                    processedAtRaw: r.processedAt,
 
-                    return {
-                        id: r.id, // сохраняем настоящий id от Aqsi
-                        raw: r,
-                        processedAt: new Date(r.processedAt),
-                        processedAtRaw: r.processedAt,
-
-                    }
-                }),
+                }
             })
 
-            sendSocketReceipt(newReceipts)
+            await prisma.nativeReceipt.createMany({
+                data: savingData
+            })
+
+            sendSocketReceipt(savingData)
             hasReceipts = true
 
         }
