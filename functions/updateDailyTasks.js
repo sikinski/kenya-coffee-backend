@@ -35,18 +35,17 @@ export async function updateDailyTasks() {
         },
     })
 
-    // ✅ Добавляем новые задачи
-    for (const task of tasks) {
-        const taskData = {
-            ...task,
-            date: todayDate,
-            done: false,
-        }
+    // ✅ Добавляем все задачи за один запрос
+    const tasksToCreate = tasks.map(task => ({
+        text: task.text,
+        date: today,
+        done: false,
+    }))
 
-        await prisma.dailyTask.create({
-            data: taskData,
-        })
-    }
+    await prisma.dailyTask.createMany({
+        data: tasksToCreate,
+        skipDuplicates: true, // на случай если вдруг дубли есть
+    })
 
     console.log("✅ Задачи добавлены на сегодня.")
 }
