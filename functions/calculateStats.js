@@ -5,6 +5,8 @@ import { getDateRange } from '../utils/getDateRange.js'
 import { parseCommaList } from '../utils/parseCommaList.js'
 
 export async function calculateStats(request, dates) {
+    const REFRESH_MINUTES = 10
+
     // --- Разбор query ---
     const queryString = request.raw.url.split('?')[1] || ''
     const query = qs.parse(queryString, { allowDots: true })
@@ -47,7 +49,7 @@ export async function calculateStats(request, dates) {
             to,
             devices: devicesParam.join(',') || null,
             createdAt: {
-                gte: now.subtract(30, 'minute').toDate() // кэш свежий (меньше 30 минут)
+                gte: now.subtract(REFRESH_MINUTES, 'minute').toDate() // кэш свежий (меньше REFRESH_MINUTES минут)
             }
         }
     })

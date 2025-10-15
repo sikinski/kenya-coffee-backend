@@ -1,5 +1,6 @@
 import qs from 'qs'
 import { calculateStats } from '../../functions/calculateStats.js'
+import prisma from '../../config/db.js'
 
 export const getStats = async (request, reply) => {
     try {
@@ -11,5 +12,15 @@ export const getStats = async (request, reply) => {
     } catch (err) {
         console.error(err)
         return reply.status(500).send('Не удалось получить статистику')
+    }
+}
+
+export const resetStats = async (request, reply) => {
+    try {
+        await prisma.statsCache.deleteMany()
+        return reply.status(200).send('Кэш сброшен')
+    } catch {
+        console.error(err)
+        return reply.status(500).send('Не получилось сбросить кэш')
     }
 }

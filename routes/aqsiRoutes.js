@@ -1,6 +1,6 @@
 import { getDevices, getShopByID } from "../controllers/aqsi/devicesController.js";
 import { getReceipts } from "../controllers/aqsi/receiptsController.js";
-import { getStats } from "../controllers/aqsi/getStats.js";
+import { getStats, resetStats } from "../controllers/aqsi/getStats.js";
 
 async function aqsiRoutes(fastify, options) {
     // Devices
@@ -11,6 +11,7 @@ async function aqsiRoutes(fastify, options) {
     fastify.get('/aqsi/get-receipts', { preHandler: [fastify.authenticate] }, getReceipts)
 
     fastify.get('/aqsi/get-stats', { preHandler: [fastify.authenticate] }, getStats)
+    fastify.post('/aqsi/reset-stats', { preHandler: [fastify.authenticate] }, resetStats)
 
 }
 
