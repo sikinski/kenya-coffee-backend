@@ -1,0 +1,99 @@
+import qs from 'qs'
+import prisma from '../../config/db.js'
+import dayjs from 'dayjs'
+import minMax from 'dayjs/plugin/minMax.js';
+import isBetween from 'dayjs/plugin/isBetween.js';
+import 'dayjs/locale/ru.js'
+
+dayjs.locale('ru')
+dayjs.extend(minMax);
+dayjs.extend(isBetween);
+
+import { parseCommaList } from '../../utils/parseCommaList.js'
+import { getDateRange } from '../../utils/getDateRange.js'
+
+async function getFilteredReceipts(request, dates) {
+    // --- Разбор query-параметров ---
+    const queryString = request.raw.url.split('?')[1] || ''
+    const query = qs.parse(queryString, { allowDots: true })
+
+    const devicesParam = (parseCommaList(query.devices) || [])
+        .map(sn => sn.toString().trim())
+        .filter(Boolean)
+
+    // --- Получаем диапазон дат ---
+    const range = getDateRange(dates)
+    if (!range) {
+        throw new Error('Не указан диапазон дат')
+    }
+
+    const from = range.processedAt.gte
+    const to = range.processedAt.lte
+
+    // --- Берём все чеки за период ---
+    const where = { processedAt: { gte: from, lte: to } }
+
+    if (devicesParam.length > 0) {
+        where.OR = devicesParam.map(sn => ({
+            raw: { path: ['deviceSN'], equals: sn }
+        }))
+    }
+
+    const receipts = await prisma.nativeReceipt.findMany({
+        where,
+        select: { processedAt: true, raw: true }
+    })
+
+    return { receipts, from, to }
+}
+
+export const getSalesGraph = async (request, reply) => {
+    try {
+        console.log(request.query);
+        const queryString = request.raw.url.split('?')[1] || ''
+        const query = qs.parse(queryString, { allowDots: true })
+        const dates = query.dates || {}
+        const { receipts, from, to } = await getFilteredReceipts(request, dates)
+
+        // --- Группировка для графика ---
+        const points = buildGraphPoints(receipts, from, to, 7)
+
+        const periodLabel = dates.custom || (dates.from && dates.to ? `${dates.from} - ${dates.to}` : 'custom')
+
+        return reply.status(200).send({
+            period: periodLabel,
+            data: points
+        })
+
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send('Не удалось получить график продаж')
+    }
+}
+
+function buildGraphPoints(receipts, from, to, dotsCount = 7) {
+    const totalDays = dayjs(to).diff(dayjs(from), 'day') + 1
+    const step = Math.max(1, Math.ceil(totalDays / dotsCount))
+    const points = []
+
+    for (let i = 0; i < totalDays; i += step) {
+        const start = dayjs(from).add(i, 'day').startOf('day')
+        const end = dayjs.min(start.add(step - 1, 'day').endOf('day'), dayjs(to))
+
+        const value = receipts
+            .filter(r => dayjs(r.processedAt).isBetween(start, end, null, '[]'))
+            .reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0)
+
+        // Подпись: если шаг один день, выводим день недели, иначе дату диапазона
+        const text = step === 1
+            ? start.format('dd') // Пн, Вт, …
+            : totalDays > 60
+                ? start.format('MMM') // Янв, Фев …
+                : `${start.format('DD.MM')} - ${end.format('DD.MM')}`
+
+
+        points.push({ text, value: Math.round(value) })
+    }
+
+    return points
+}
