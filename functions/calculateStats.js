@@ -63,9 +63,9 @@ export async function calculateStats(request, dates) {
         select: { raw: true }
     })
 
-    const revenue = receipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0)
+    const revenue = Math.round(receipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0))
     const receiptsCount = receipts.length
-    const avgCheck = receiptsCount > 0 ? +(revenue / receiptsCount).toFixed(2) : 0 // округляем
+    const avgCheck = receiptsCount > 0 ? Math.round(revenue / receiptsCount) : 0
 
     // --- Выручка за день ---
     const dayFrom = now.startOf('day').toDate()
@@ -89,7 +89,7 @@ export async function calculateStats(request, dates) {
         select: { raw: true }
     })
 
-    const dayRevenue = dayReceipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0)
+    const dayRevenue = Math.round(dayReceipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0))
 
     const result = {
         period,
