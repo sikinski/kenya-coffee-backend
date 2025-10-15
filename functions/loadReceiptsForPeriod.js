@@ -9,8 +9,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let page = 0
     let hasReceipts = false
 
-    const tz = 'Asia/Yekaterinburg';
-
     while (true) {
         const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
@@ -58,7 +56,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
         if (data.pages && page >= data.pages) break
         if (!newReceipts?.length) break;
-        if (page > 5) break;
         page++
     }
 

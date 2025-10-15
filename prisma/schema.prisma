@@ -87,3 +87,21 @@ model NativeReceipt {
   createdAt    DateTime @default(now())
 }
 
+model StatsCache {
+    id         String   @id @default(cuid())
+    period     String   // 'day', 'week', 'month', 'quarter', или 'custom'
+    from       DateTime
+    to         DateTime
+    revenue    Float // 💰 общая выручка за период
+    avgCheck   Float // 📈 средний чек
+    receiptsCount Int // 🧾 количество чеков
+    dayRevenue Float // ☀️ выручка за день
+    createdAt  DateTime @default(now())
+    devices     String?
+}
+
+
+// revenue,        // 💰 общая выручка за период
+//         avgCheck,       // 📈 средний чек
+//         receiptsCount,  // 🧾 количество чеков
+//         dayRevenue      // ☀️ выручка за день

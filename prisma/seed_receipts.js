@@ -2,7 +2,7 @@ import prisma from "../config/db.js";
 import { loadReceiptsForPeriod } from '../functions/loadReceiptsForPeriod.js';
 
 async function main() {
-    // await prisma.nativeReceipt.deleteMany();
+    await prisma.nativeReceipt.deleteMany();
 
     const count = await prisma.nativeReceipt.count();
 
