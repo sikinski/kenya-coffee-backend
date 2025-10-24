@@ -25,4 +25,6 @@ cron.schedule('0 0 * * *', async () => {
     }
 
     console.log("✅ Чеки добавлены за все время.");
+}, {
+    timezone: "Asia/Yekaterinburg" // <-- Челябинск/Екатеринбург (UTC+5)
 })

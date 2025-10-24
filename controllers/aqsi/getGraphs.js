@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import minMax from 'dayjs/plugin/minMax.js';
 import isBetween from 'dayjs/plugin/isBetween.js';
 import 'dayjs/locale/ru.js'
+import productTypes from '../../helpers/product-types.js'
 
 dayjs.locale('ru')
 dayjs.extend(minMax);
@@ -19,6 +20,10 @@ async function getFilteredReceipts(request, dates) {
 
     const devicesParam = (parseCommaList(query.devices) || [])
         .map(sn => sn.toString().trim())
+        .filter(Boolean)
+
+    const productsParam = (parseCommaList(query.products) || [])
+        .map(product => product.toString().trim())
         .filter(Boolean)
 
     // --- Получаем диапазон дат ---
@@ -71,6 +76,81 @@ export const getSalesGraph = async (request, reply) => {
     }
 }
 
+export const getProductsGraph = async (request, reply) => {
+    try {
+        console.log(request.query);
+
+        const products = productTypes.find(obj => obj.type === request.query.product_type).items
+
+        // === получить чеки по датам ===
+        const queryString = request.raw.url.split('?')[1] || ''
+        const query = qs.parse(queryString, { allowDots: true })
+        const dates = query.dates || {}
+        const { receipts, from, to } = await getFilteredReceipts(request, dates)
+
+        // === ===
+        const productsParam = (parseCommaList(products.join(',')) || [])
+            .map(product => product.toString().trim().toLowerCase()) // приводим к нижнему регистру сразу
+            .filter(Boolean)
+
+
+        let filteredReceipts = receipts
+
+        // Если указаны продукты, фильтруем чеки
+        if (productsParam.length > 0) {
+            filteredReceipts = receipts.filter(receipt => {
+                const positions = receipt.raw?.content?.positions || []
+
+                // Проверяем, есть ли хотя бы один продукт из productsParam в тексте позиций
+                return positions.some(position => {
+                    const positionText = position.text?.toLowerCase() || ''
+                    return productsParam.some(product =>
+                        positionText.includes(product)
+                    )
+                })
+            })
+        }
+        console.log(filteredReceipts);
+
+
+        // --- Считаем статистику по продуктам ---
+        const productStats = {}
+
+        filteredReceipts.forEach(receipt => {
+            const positions = receipt.raw?.content?.positions || []
+
+            positions.forEach(position => {
+                const positionText = position.text?.toLowerCase() || ''
+
+                // Находим все продукты, которые встречаются в этом тексте
+                productsParam.forEach(product => {
+                    if (positionText.includes(product)) {
+                        if (!productStats[product]) {
+                            productStats[product] = 0
+                        }
+                        productStats[product]++
+                    }
+                })
+            })
+        })
+        console.log(productStats);
+
+
+        // Преобразуем в нужный формат (возвращаем оригинальные названия продуктов)
+        const result = Object.entries(productStats).map(([name, count]) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1), // восстанавливаем регистр для красоты
+            count
+        }))
+
+        return reply.status(200).send(result)
+
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send('Не удалось получить график покупок')
+    }
+}
+
+// ============ HELPERS ============ 
 function buildGraphPoints(receipts, from, to, dotsCount = 7) {
     const totalDays = dayjs(to).diff(dayjs(from), 'day') + 1
     const step = Math.max(1, Math.ceil(totalDays / dotsCount))
@@ -96,4 +176,20 @@ function buildGraphPoints(receipts, from, to, dotsCount = 7) {
     }
 
     return points
+}
+
+function getUniqueProducts(receipts) {
+    const products = receipts.map(receiptObj => [...receiptObj.raw.content.positions])
+        .flat(1); // или .flat()
+
+    console.log('Products:', products);
+
+    let textProducts = products.map(product => product.text);
+    console.log('Text products:', textProducts);
+
+    let uniqueProducts = new Set(textProducts);
+    console.log('Unique products:', uniqueProducts);
+    console.log('Array from Set:', Array.from(uniqueProducts));
+
+    return Array.from(uniqueProducts)
 }
