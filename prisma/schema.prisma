@@ -17,7 +17,6 @@ model User {
     createdAt DateTime @default(now())
     daily_tasks DailyTask[] // <-- обратная связь
     notes     Note[]    // 👈 добавили связь с заметками
-    report      Report[]
 }
 
 model DailyTask {
@@ -48,20 +47,6 @@ model NoteTopic {
     color  String  // цвет (hex, rgb или tailwind-class — решим сами)
     notes  Note[]
     created_at        DateTime @default(now())
-}
-
-model Report {
-    id                Int @id @default(autoincrement())
-    date              DateTime // <-- дата отчёта (обнуляем время при сохранении)
-    cash              Decimal?
-    non_cash          Decimal?
-    total             Decimal?
-    number_purchases  Int?
-    cash_register     Decimal?
-    userId            Int?
-    user              User?    @relation(fields: [userId], references: [id])  // <-- связь с User
-    created_at        DateTime @default(now())
-    updated_at        DateTime @updatedAt
 }
 
 model Receipt {

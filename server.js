@@ -7,12 +7,11 @@ import cors from "@fastify/cors";
 import authPlugin from "./plugins/auth.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
-import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
 import './cron/receiptsUpdater.js'
-import './cron/everydayReport.js'
 import './cron/everydayTasks.js'
+import './cron/fromzeroreceipts.js'
 
 
 import { setupReceiptWS } from "./websockets/receiptWS.js";
@@ -38,7 +37,6 @@ await fastify.register(cors, {
 fastify.register(authRoutes);
 fastify.register(taskRoutes);
 fastify.register(noteRoutes)
-fastify.register(reportRoutes)
 fastify.register(userRoutes)
 fastify.register(aqsiRoutes)
 

@@ -10,7 +10,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     let hasReceipts = false
 
     while (true) {
-        const queryString = `?page=${page}&pageSize=50&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
+        const queryString = `?page=${page}&pageSize=100&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
         console.log('>>> AQSI запрос:', queryString)
 

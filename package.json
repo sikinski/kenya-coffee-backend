@@ -7,7 +7,6 @@
     "scripts": {
         "start": "node server.js",
         "seed:users": "node prisma/seed_users.js",
-        "seed:report": "node prisma/seed_report.js",
         "seed:tasks": "node prisma/seed_tasks.js",
         "seed:receipts": "node prisma/seed_receipts.js",
         "swagger": "node scripts/swagger.js"
