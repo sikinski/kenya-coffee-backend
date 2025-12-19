@@ -4,11 +4,16 @@ import Fastify from "fastify";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
+import staticFiles from "@fastify/static";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import authPlugin from "./plugins/auth.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
+import menuRoutes from "./routes/menuRoutes.js";
 import './cron/receiptsUpdater.js'
 import './cron/fromzeroreceipts.js'
 import './cron/dailyTasksGenerator.js'
@@ -33,12 +38,28 @@ await fastify.register(cors, {
     credentials: true
 });
 
-// Регистрируем роуты /auth, /refresh
+// Регистрируем multipart для загрузки файлов
+await fastify.register(multipart, {
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB максимум
+    }
+});
+
+// Статическая раздача файлов из uploads
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+await fastify.register(staticFiles, {
+    root: join(__dirname, 'uploads'),
+    prefix: '/uploads/'
+});
+
+// Регистрируем роуты
 fastify.register(authRoutes);
 fastify.register(taskRoutes);
-fastify.register(noteRoutes)
-fastify.register(userRoutes)
-fastify.register(aqsiRoutes)
+fastify.register(noteRoutes);
+fastify.register(userRoutes);
+fastify.register(aqsiRoutes);
+fastify.register(menuRoutes);
 
 
 const start = async () => {
