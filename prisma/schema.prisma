@@ -1,59 +1,63 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
-
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-    id        Int      @id @default(autoincrement())
-    name      String   @default("Имя пользователя")
-    username  String   @unique
-    password  String
-    role      String   // "admin" или "user"
-    createdAt DateTime @default(now())
-    daily_tasks DailyTask[] // <-- обратная связь
-    notes     Note[]    // 👈 добавили связь с заметками
+  id          Int         @id @default(autoincrement())
+  name        String      @default("Имя пользователя")
+  username    String      @unique
+  password    String
+  role        String // "admin" или "user"
+  createdAt   DateTime    @default(now())
+  daily_tasks DailyTask[] // <-- обратная связь
+  notes       Note[] // 👈 добавили связь с заметками
 }
 
 model Task {
-    id        Int      @id @default(autoincrement())
-    text      String   // текст задачи
-    order     Int      @default(autoincrement())
-    createdAt DateTime @default(now())
-    dailyTask DailyTask?
+  id         Int         @id @default(autoincrement())
+  text       String // текст задачи
+  order      Int         @default(0) // порядок сортировки
+  priority   String      @default("normal") // "low", "normal", "high"
+  active     Boolean     @default(true) // активна ли задача (для создания ежедневных)
+  createdAt  DateTime    @default(now())
+  dailyTasks DailyTask[] // связь с ежедневными задачами
 }
 
 model DailyTask {
-    id        Int      @id @default(autoincrement())
-    date      DateTime
-    done      Boolean  @default(false)
-    userId    Int?
-    user      User?    @relation(fields: [userId], references: [id])
-    taskId    Int      @unique
-    task      Task     @relation(fields: [taskId], references: [id])
+  id     Int      @id @default(autoincrement())
+  date   DateTime @db.Date // дата задачи (только дата, без времени)
+  done   Boolean  @default(false)
+  userId Int?
+  user   User?    @relation(fields: [userId], references: [id])
+  taskId Int
+  task   Task     @relation(fields: [taskId], references: [id])
+
+  @@unique([taskId, date]) // одна задача может быть только один раз в день
+  @@index([date]) // для быстрого поиска по дате
 }
 
 model Note {
-    id          Int      @id @default(autoincrement())
-    text        String
-    author_id   Int
-    author      User     @relation(fields: [author_id], references: [id])
-    created_at  DateTime @default(now())
-    updated_at  DateTime @updatedAt
-    topicId    Int?                               // связь с темой
-    topic      NoteTopic? @relation(fields: [topicId], references: [id])
+  id         Int        @id @default(autoincrement())
+  text       String
+  author_id  Int
+  author     User       @relation(fields: [author_id], references: [id])
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  topicId    Int? // связь с темой
+  topic      NoteTopic? @relation(fields: [topicId], references: [id])
 }
 
 model NoteTopic {
-    id     Int     @id @default(autoincrement())
-    name   String  // название темы
-    color  String  // цвет (hex, rgb или tailwind-class — решим сами)
-    notes  Note[]
-    created_at        DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  name       String // название темы
+  color      String // цвет (hex, rgb или tailwind-class — решим сами)
+  notes      Note[]
+  created_at DateTime @default(now())
 }
 
 model Receipt {
@@ -71,27 +75,26 @@ model Receipt {
 }
 
 model NativeReceipt {
-  id           String   @id @default(cuid())
-  aqsiId       String?   @unique
-  raw          Json
-  processedAt  DateTime @db.Timestamp(6)
-  processedAtRaw    String?
-  createdAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  aqsiId         String?  @unique
+  raw            Json
+  processedAt    DateTime @db.Timestamp(6)
+  processedAtRaw String?
+  createdAt      DateTime @default(now())
 }
 
 model StatsCache {
-    id         String   @id @default(cuid())
-    period     String   // 'day', 'week', 'month', 'quarter', или 'custom'
-    from       DateTime
-    to         DateTime
-    revenue    Float // 💰 общая выручка за период
-    avgCheck   Float // 📈 средний чек
-    receiptsCount Int // 🧾 количество чеков
-    dayRevenue Float // ☀️ выручка за день
-    createdAt  DateTime @default(now())
-    devices     String?
+  id            String   @id @default(cuid())
+  period        String // 'day', 'week', 'month', 'quarter', или 'custom'
+  from          DateTime
+  to            DateTime
+  revenue       Float // 💰 общая выручка за период
+  avgCheck      Float // 📈 средний чек
+  receiptsCount Int // 🧾 количество чеков
+  dayRevenue    Float // ☀️ выручка за день
+  createdAt     DateTime @default(now())
+  devices       String?
 }
-
 
 // revenue,        // 💰 общая выручка за период
 //         avgCheck,       // 📈 средний чек

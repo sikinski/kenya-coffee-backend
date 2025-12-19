@@ -1,9 +1,22 @@
 import prisma from '../config/db.js'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc.js'
+import timezone from 'dayjs/plugin/timezone.js'
 
-// ======== TASKS ========  
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const TZ = 'Asia/Yekaterinburg'
+
+// ======== TASKS (базовый список задач) ========  
 export const getTasks = async (request, reply) => {
     try {
-        const tasks = await prisma.task.findMany()
+        const tasks = await prisma.task.findMany({
+            orderBy: [
+                { order: 'asc' },
+                { createdAt: 'asc' }
+            ]
+        })
         return reply.status(200).send(tasks || [])
     } catch (err) {
         console.error(err)
@@ -11,23 +24,220 @@ export const getTasks = async (request, reply) => {
     }
 }
 
-export const createNewTask = async (request, reply) => {
-    // TODO: Реализовать создание задачи
+export const createTask = async (request, reply) => {
+    try {
+        const { text, priority = 'normal', order } = request.body
+
+        if (!text || !text.trim()) {
+            return reply.status(400).send({ error: 'Текст задачи обязателен' })
+        }
+
+        // Если order не указан, ставим в конец
+        let taskOrder = order
+        if (taskOrder === undefined || taskOrder === null) {
+            const lastTask = await prisma.task.findFirst({
+                orderBy: { order: 'desc' }
+            })
+            taskOrder = lastTask ? lastTask.order + 1 : 0
+        }
+
+        // Проверяем валидность priority
+        const validPriorities = ['low', 'normal', 'high']
+        const taskPriority = validPriorities.includes(priority) ? priority : 'normal'
+
+        const task = await prisma.task.create({
+            data: {
+                text: text.trim(),
+                priority: taskPriority,
+                order: taskOrder,
+                active: true
+            }
+        })
+
+        return reply.status(201).send(task)
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка создания задачи' })
+    }
 }
 
-export const deleteTaskFromList = async (request, reply) => {
-    // TODO: Реализовать удаление задачи
+export const updateTask = async (request, reply) => {
+    try {
+        const { id } = request.params
+        const { text, priority, order, active } = request.body
+
+        const task = await prisma.task.findUnique({ where: { id: Number(id) } })
+        if (!task) {
+            return reply.status(404).send({ error: 'Задача не найдена' })
+        }
+
+        const updateData = {}
+        if (text !== undefined) updateData.text = text.trim()
+        if (priority !== undefined) {
+            const validPriorities = ['low', 'normal', 'high']
+            updateData.priority = validPriorities.includes(priority) ? priority : task.priority
+        }
+        if (order !== undefined) updateData.order = Number(order)
+        if (active !== undefined) updateData.active = Boolean(active)
+
+        const updatedTask = await prisma.task.update({
+            where: { id: Number(id) },
+            data: updateData
+        })
+
+        return reply.status(200).send(updatedTask)
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка обновления задачи' })
+    }
 }
 
-// ======== DAILY TASKS ========  
-export const getDaily = async (request, reply) => {
-    // TODO: Реализовать получение ежедневных задач
+export const updateTasksOrder = async (request, reply) => {
+    try {
+        const { tasks } = request.body // массив { id, order }
+
+        if (!Array.isArray(tasks)) {
+            return reply.status(400).send({ error: 'Неверный формат данных' })
+        }
+
+        // Обновляем порядок всех задач
+        const updates = tasks.map(({ id, order }) =>
+            prisma.task.update({
+                where: { id: Number(id) },
+                data: { order: Number(order) }
+            })
+        )
+
+        await Promise.all(updates)
+
+        return reply.status(200).send({ success: true })
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка обновления порядка задач' })
+    }
 }
 
-export const updateDaily = async (request, reply) => {
-    // TODO: Реализовать обновление ежедневной задачи
+export const deleteTask = async (request, reply) => {
+    try {
+        const { id } = request.params
+
+        const task = await prisma.task.findUnique({ where: { id: Number(id) } })
+        if (!task) {
+            return reply.status(404).send({ error: 'Задача не найдена' })
+        }
+
+        await prisma.task.delete({ where: { id: Number(id) } })
+
+        return reply.status(200).send({ success: true })
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка удаления задачи' })
+    }
 }
 
-export const deleteDaily = async (request, reply) => {
-    // TODO: Реализовать удаление ежедневной задачи
+// ======== DAILY TASKS (ежедневные задачи) ========  
+export const getDailyTasks = async (request, reply) => {
+    try {
+        const { date } = request.query
+
+        // Если дата не указана, берем сегодня
+        const targetDate = date
+            ? dayjs.tz(date, 'YYYY-MM-DD', TZ).startOf('day')
+            : dayjs().tz(TZ).startOf('day')
+
+        if (!targetDate.isValid()) {
+            return reply.status(400).send({ error: 'Неверный формат даты. Используйте YYYY-MM-DD' })
+        }
+
+        const dailyTasks = await prisma.dailyTask.findMany({
+            where: {
+                date: targetDate.toDate()
+            },
+            include: {
+                task: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                task: {
+                    order: 'asc'
+                }
+            }
+        })
+
+        return reply.status(200).send(dailyTasks || [])
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка получения ежедневных задач' })
+    }
+}
+
+export const updateDailyTask = async (request, reply) => {
+    try {
+        const { id } = request.params
+        const { done, userId } = request.body
+
+        const dailyTask = await prisma.dailyTask.findUnique({
+            where: { id: Number(id) },
+            include: { task: true }
+        })
+
+        if (!dailyTask) {
+            return reply.status(404).send({ error: 'Ежедневная задача не найдена' })
+        }
+
+        const updateData = {}
+        if (done !== undefined) updateData.done = Boolean(done)
+        if (userId !== undefined) {
+            // Проверяем, что пользователь существует
+            if (userId !== null) {
+                const user = await prisma.user.findUnique({ where: { id: Number(userId) } })
+                if (!user) {
+                    return reply.status(404).send({ error: 'Пользователь не найден' })
+                }
+            }
+            updateData.userId = userId ? Number(userId) : null
+        }
+
+        const updated = await prisma.dailyTask.update({
+            where: { id: Number(id) },
+            data: updateData,
+            include: {
+                task: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            }
+        })
+
+        return reply.status(200).send(updated)
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка обновления ежедневной задачи' })
+    }
+}
+
+export const deleteDailyTask = async (request, reply) => {
+    try {
+        const { id } = request.params
+
+        const dailyTask = await prisma.dailyTask.findUnique({ where: { id: Number(id) } })
+        if (!dailyTask) {
+            return reply.status(404).send({ error: 'Ежедневная задача не найдена' })
+        }
+
+        await prisma.dailyTask.delete({ where: { id: Number(id) } })
+
+        return reply.status(200).send({ success: true })
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка удаления ежедневной задачи' })
+    }
 }
