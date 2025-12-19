@@ -122,7 +122,18 @@ export async function calculateStats(request, dates) {
 function calculateRevenue(receipts) {
     return Math.round(receipts.reduce((sum, r) => {
         const amount = Number(r.raw?.amount) || 0;
-        // AQSI возвращает сумму уже в рублях
-        return sum + amount;
+        const type = r.raw?.content?.type;
+
+        // AQSI считает только чеки типа 1 (продажи) и вычитает чеки типа 2 (возвраты)
+        // Тип 1 = продажа (добавляем)
+        // Тип 2 = возврат (вычитаем)
+        // Остальные типы или если тип не указан (undefined/null) - не учитываем
+        if (type === 1) {
+            return sum + amount;
+        } else if (type === 2) {
+            return sum - amount; // Возвраты вычитаем
+        }
+        // Для других типов или если тип не указан (undefined/null), не учитываем
+        return sum;
     }, 0))
 }

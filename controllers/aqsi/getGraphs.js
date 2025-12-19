@@ -169,7 +169,16 @@ function buildGraphPoints(receipts, from, to, dotsCount = 7) {
             .filter(r => dayjs(r.processedAt).isBetween(start, end, null, '[]'))
             .reduce((sum, r) => {
                 const amount = Number(r.raw?.amount) || 0;
-                return sum + amount; // AQSI возвращает сумму уже в рублях
+                const type = r.raw?.content?.type;
+
+                // AQSI считает только чеки типа 1 (продажи) и вычитает чеки типа 2 (возвраты)
+                // Остальные типы или если тип не указан (undefined/null) - не учитываем
+                if (type === 1) {
+                    return sum + amount;
+                } else if (type === 2) {
+                    return sum - amount; // Возвраты вычитаем
+                }
+                return sum;
             }, 0)
 
         // Подпись: если шаг один день, выводим день недели, иначе дату диапазона
