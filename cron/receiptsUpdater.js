@@ -1,14 +1,21 @@
 import cron from 'node-cron'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc.js'
+import timezone from 'dayjs/plugin/timezone.js'
 import { loadReceiptsForPeriod } from '../functions/loadReceiptsForPeriod.js';
 import prisma from '../config/db.js'
 
-// ====== CRON
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const TZ = 'Asia/Yekaterinburg'
+
+// ====== CRON - обновление чеков каждую минуту
 cron.schedule('* * * * *', async () => {
     console.log('🔄 Обновляем чеки Aqsi...', new Date().toISOString());
 
-    let currentEndDate = new Date();
-    currentEndDate.setDate(currentEndDate.getDate() + 2);
-    currentEndDate.setHours(23, 59, 59, 999);
+    // Конец завтрашнего дня (чтобы захватить все чеки, включая сегодняшние)
+    const currentEndDate = dayjs().tz(TZ).add(2, 'day').endOf('day').toDate();
 
     let currentBeginDate;
 
@@ -17,12 +24,13 @@ cron.schedule('* * * * *', async () => {
     })
 
     if (last) {
-        const lastDate = new Date(last.processedAt);
-        lastDate.setHours(0, 0, 0, 0);
-        currentBeginDate = new Date(lastDate.getTime() - 5 * 60 * 60 * 1000);
+        // Начинаем с начала дня последнего чека, минус небольшой запас (1 час) для надежности
+        const lastDate = dayjs(last.processedAt).tz(TZ);
+        currentBeginDate = lastDate.startOf('day').subtract(1, 'hour').toDate();
     } else {
-        const twoMonthsMs = 2 * 30 * 24 * 60 * 60 * 1000;
-        currentBeginDate = new Date(currentEndDate.getTime() - twoMonthsMs);
+        // Если нет чеков, загружаем за последние 2 месяца
+        const twoMonthsAgo = dayjs().tz(TZ).subtract(2, 'month');
+        currentBeginDate = twoMonthsAgo.startOf('day').toDate();
     }
 
     try {
@@ -30,4 +38,6 @@ cron.schedule('* * * * *', async () => {
     } catch (err) {
         console.error('❌ Ошибка при обновлении чеков:', err)
     }
+}, {
+    timezone: TZ
 })

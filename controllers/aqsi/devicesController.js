@@ -14,7 +14,7 @@ export const getDevices = async (request, reply) => {
         return reply.status(200).send(response.data)
 
     } catch (err) {
-        return reply.status(500).send("Ошибка при обращении к Aqsi:", err?.response?.data || err.message)
+        return reply.status(500).send({ error: "Ошибка при обращении к Aqsi", details: err?.response?.data || err.message })
     }
 }
 
@@ -40,6 +40,6 @@ export const getShopByID = async (request, reply) => {
 
     } catch (err) {
         console.error(err);
-        return reply.status(500).send("Ошибка получения данных магазина", err?.response?.data || err.message)
+        return reply.status(500).send({ error: "Ошибка получения данных магазина", details: err?.response?.data || err.message })
     }
 }

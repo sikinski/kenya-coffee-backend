@@ -19,7 +19,7 @@ export const resetStats = async (request, reply) => {
     try {
         await prisma.statsCache.deleteMany()
         return reply.status(200).send('Кэш сброшен')
-    } catch {
+    } catch (err) {
         console.error(err)
         return reply.status(500).send('Не получилось сбросить кэш')
     }

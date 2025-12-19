@@ -15,7 +15,7 @@ export default fp(async function (fastify, opts) {
 
             request.user = payload; // добавляем user в запрос
         } catch (err) {
-            reply.code(401).send({ error: "Не авторизован или токен просрочен" });
+            return reply.code(401).send({ error: "Не авторизован или токен просрочен" });
         }
     });
 });

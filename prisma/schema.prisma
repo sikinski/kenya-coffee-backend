@@ -19,15 +19,22 @@ model User {
     notes     Note[]    // 👈 добавили связь с заметками
 }
 
-model DailyTask {
+model Task {
     id        Int      @id @default(autoincrement())
     text      String   // текст задачи
-    date      DateTime // дата задачи, передаём при создании
-    done      Boolean  @default(false)
-    userId    Int?// Знак ? в Prisma означает, что поле nullable, то есть может быть null. пока может быть пустым, позже можно сделать обязательным
-    user      User?    @relation(fields: [userId], references: [id])  // <-- связь с User
+    order     Int      @default(autoincrement())
     createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    dailyTask DailyTask?
+}
+
+model DailyTask {
+    id        Int      @id @default(autoincrement())
+    date      DateTime
+    done      Boolean  @default(false)
+    userId    Int?
+    user      User?    @relation(fields: [userId], references: [id])
+    taskId    Int      @unique
+    task      Task     @relation(fields: [taskId], references: [id])
 }
 
 model Note {

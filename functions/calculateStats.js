@@ -1,8 +1,15 @@
 import prisma from '../config/db.js'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc.js'
+import timezone from 'dayjs/plugin/timezone.js'
 import qs from 'qs'
 import { getDateRange } from '../utils/getDateRange.js'
 import { parseCommaList } from '../utils/parseCommaList.js'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
+const TZ = 'Asia/Yekaterinburg'
 
 export async function calculateStats(request, dates) {
     const REFRESH_MINUTES = 10
@@ -22,7 +29,7 @@ export async function calculateStats(request, dates) {
 
     const from = range.processedAt.gte
     const to = range.processedAt.lte
-    const now = dayjs()
+    const now = dayjs().tz(TZ)
 
     // Определяем "тип периода" (для кэша)
     const period = dates.custom || 'custom'
@@ -65,11 +72,11 @@ export async function calculateStats(request, dates) {
         select: { raw: true }
     })
 
-    const revenue = Math.round(receipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0))
+    const revenue = calculateRevenue(receipts)
     const receiptsCount = receipts.length
     const avgCheck = receiptsCount > 0 ? Math.round(revenue / receiptsCount) : 0
 
-    // --- Выручка за день ---
+    // --- Выручка за день (в timezone Asia/Yekaterinburg) ---
     const dayFrom = now.startOf('day').toDate()
     const dayTo = now.endOf('day').toDate()
 
@@ -91,7 +98,7 @@ export async function calculateStats(request, dates) {
         select: { raw: true }
     })
 
-    const dayRevenue = Math.round(dayReceipts.reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0))
+    const dayRevenue = calculateRevenue(dayReceipts)
 
     const result = {
         period,
@@ -110,4 +117,12 @@ export async function calculateStats(request, dates) {
     console.log('💾 Кэш обновлён')
 
     return result
+}
+
+function calculateRevenue(receipts) {
+    return Math.round(receipts.reduce((sum, r) => {
+        const amount = Number(r.raw?.amount) || 0;
+        // AQSI возвращает сумму уже в рублях
+        return sum + amount;
+    }, 0))
 }

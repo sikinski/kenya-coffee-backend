@@ -14,20 +14,30 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
         console.log('>>> AQSI запрос:', queryString)
 
-        const response = await axios.get(`${AQSI_URL}/v2/Receipts${queryString}`, {
-            headers: { 'x-client-key': `Application ${AQSI_KEY}` }
-        })
+        let response;
+        try {
+            response = await axios.get(`${AQSI_URL}/v2/Receipts${queryString}`, {
+                headers: { 'x-client-key': `Application ${AQSI_KEY}` }
+            })
+        } catch (err) {
+            console.error('❌ Ошибка при запросе к AQSI:', err.message);
+            // Если это не последняя страница, продолжаем, иначе прерываем
+            if (page === 0) {
+                throw err; // Если ошибка на первой странице, пробрасываем дальше
+            }
+            break; // Если ошибка на последующих страницах, просто прерываем цикл
+        }
 
         const data = response.data
         if (!data.rows || data.rows.length === 0) break
 
-        // Проверим, какие ID уже есть
+        // Проверим, какие ID уже есть (по aqsiId, так как это уникальный идентификатор от AQSI)
         const existing = await prisma.nativeReceipt.findMany({
-            where: { id: { in: data.rows.map(r => r.id) } },
-            select: { id: true }
+            where: { aqsiId: { in: data.rows.map(r => r.id) } },
+            select: { aqsiId: true }
         })
 
-        const existingIds = new Set(existing.map(r => r.id))
+        const existingIds = new Set(existing.map(r => r.aqsiId).filter(Boolean))
         const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
 
         if (newReceipts.length > 0) {
@@ -35,11 +45,10 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
             const savingData = newReceipts.map(r => {
                 return {
-                    id: r.id, // сохраняем настоящий id от Aqsi
+                    aqsiId: r.id, // сохраняем ID от AQSI в поле aqsiId
                     raw: r,
                     processedAt: new Date(r.processedAt),
                     processedAtRaw: r.processedAt,
-
                 }
             })
 

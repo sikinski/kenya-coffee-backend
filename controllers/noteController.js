@@ -36,7 +36,7 @@ export const createNote = async (request, reply) => {
     const { text, topicId } = request.body
 
     if (!text) {
-        return reply.status(400), send({ error: 'Поле text обязательно' })
+        return reply.status(400).send({ error: 'Поле text обязательно' })
     }
 
     try {
@@ -88,9 +88,9 @@ export const updateNote = async (request, reply) => {
         return reply.send({
             id: updatedNote.id,
             text: updatedNote.text,
-            author_name: updatedNote.author,
-            created_at: updateNote.created_at,
-            updated_at: updateNote.updated_at
+            author_name: updatedNote.author.name,
+            created_at: updatedNote.created_at,
+            updated_at: updatedNote.updated_at
         })
     } catch (err) {
         return reply.status(500).send({ error: 'Ошибка обновления заметки' })
@@ -105,7 +105,7 @@ export const deleteNote = async (request, reply) => {
         const note = await prisma.note.findUnique({ where: { id: Number(id) } })
 
         if (!note) {
-            reply.status(404).send({ error: 'Заметка не найдена' })
+            return reply.status(404).send({ error: 'Заметка не найдена' })
         }
 
         await prisma.note.delete({ where: { id: Number(id) } })
@@ -116,7 +116,7 @@ export const deleteNote = async (request, reply) => {
         // 👉 Но всегда через { where: ... }.
         return reply.send({ success: true })
     } catch (err) {
-        reply.status(500).send({ error: 'Ошибка удаления записи' })
+        return reply.status(500).send({ error: 'Ошибка удаления записи' })
     }
 }
 

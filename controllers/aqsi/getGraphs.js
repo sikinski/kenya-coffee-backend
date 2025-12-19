@@ -80,7 +80,12 @@ export const getProductsGraph = async (request, reply) => {
     try {
         console.log(request.query);
 
-        const products = productTypes.find(obj => obj.type === request.query.product_type).items
+        const productTypeObj = productTypes.find(obj => obj.type === request.query.product_type)
+        if (!productTypeObj) {
+            return reply.status(400).send({ error: 'Неверный тип продукта' })
+        }
+
+        const products = productTypeObj.items
 
         // === получить чеки по датам ===
         const queryString = request.raw.url.split('?')[1] || ''
@@ -162,7 +167,10 @@ function buildGraphPoints(receipts, from, to, dotsCount = 7) {
 
         const value = receipts
             .filter(r => dayjs(r.processedAt).isBetween(start, end, null, '[]'))
-            .reduce((sum, r) => sum + (Number(r.raw?.amount) || 0), 0)
+            .reduce((sum, r) => {
+                const amount = Number(r.raw?.amount) || 0;
+                return sum + amount; // AQSI возвращает сумму уже в рублях
+            }, 0)
 
         // Подпись: если шаг один день, выводим день недели, иначе дату диапазона
         const text = step === 1

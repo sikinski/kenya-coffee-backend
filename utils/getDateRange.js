@@ -20,17 +20,18 @@ export function getDateRange(dates) {
         if (days) {
             const from = now.subtract(days - 1, 'day').startOf('day').toDate()
             const to = now.endOf('day').toDate()
-            console.log({ processedAt: { gte: from, lte: to } });
-
             return { processedAt: { gte: from, lte: to } } // <--- всегда ключ processedAt
         }
     }
 
     // --- from / to ---
     if (dates.from || dates.to) {
-        const from = dates.from ? dayjs(dates.from, 'DD.MM.YYYY').startOf('day').toDate() : undefined
-        const to = dates.to ? dayjs(dates.to, 'DD.MM.YYYY').endOf('day').toDate() : undefined
-        console.log({ processedAt: { gte: from, lte: to } });
+        const from = dates.from
+            ? dayjs.tz(dates.from, 'DD.MM.YYYY', TZ).startOf('day').toDate()
+            : undefined
+        const to = dates.to
+            ? dayjs.tz(dates.to, 'DD.MM.YYYY', TZ).endOf('day').toDate()
+            : undefined
 
         if (from && to) return { processedAt: { gte: from, lte: to } }
         if (from) return { processedAt: { gte: from } }
