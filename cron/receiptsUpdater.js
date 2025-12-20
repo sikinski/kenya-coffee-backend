@@ -15,7 +15,7 @@ cron.schedule('* * * * *', async () => {
     console.log('🔄 Обновляем чеки Aqsi...', new Date().toISOString());
 
     // Конец завтрашнего дня (чтобы захватить все чеки, включая сегодняшние)
-    const currentEndDate = dayjs().tz(TZ).add(2, 'day').endOf('day').toDate();
+    const currentEndDate = dayjs().tz(TZ).add(1, 'day').endOf('day').toDate();
 
     let currentBeginDate;
 
@@ -24,9 +24,10 @@ cron.schedule('* * * * *', async () => {
     })
 
     if (last) {
-        // Начинаем с начала дня последнего чека, минус небольшой запас (1 час) для надежности
+        // Берем точную дату последнего чека, минус небольшой запас (1 минута) для надежности
+        // Это гарантирует, что мы не пропустим чеки, которые могли прийти в ту же секунду
         const lastDate = dayjs(last.processedAt).tz(TZ);
-        currentBeginDate = lastDate.startOf('day').subtract(1, 'hour').toDate();
+        currentBeginDate = lastDate.subtract(1, 'minute').toDate();
     } else {
         // Если нет чеков, загружаем за последние 2 месяца
         const twoMonthsAgo = dayjs().tz(TZ).subtract(2, 'month');

@@ -15,7 +15,6 @@ import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
 import './cron/receiptsUpdater.js'
-import './cron/fromzeroreceipts.js'
 import './cron/dailyTasksGenerator.js'
 
 
