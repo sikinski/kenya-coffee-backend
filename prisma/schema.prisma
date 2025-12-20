@@ -125,8 +125,7 @@ model MenuItem {
   description    String? // описание
   price          Json // цена: объект { from: number | null, to: number | null }
   discountPrice  Decimal? // цена со скидкой
-  imageOriginal  String? // путь к исходному изображению
-  imageThumbnail String? // путь к сжатому изображению
+  images         Json // массив изображений: [{ imageOrg: string, imageThumbnail: string }, ...] - первый элемент главное изображение
   quantity       Int? // количество (если ограничено)
   volume         String[] // объем или вес - массив (например, ["250 мл", "350 мл"])
   rating         Float          @default(0) // средний рейтинг (0-5)

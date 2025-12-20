@@ -57,6 +57,76 @@ function validateAndNormalizePrice(price) {
     return { error: 'Поле price должно быть объектом с полями from и to, или числом' }
 }
 
+// Функция для валидации и нормализации массива изображений
+function validateAndNormalizeImages(images) {
+    // Если images не передан, возвращаем пустой массив
+    if (images === undefined || images === null) {
+        return { images: [] }
+    }
+
+    // Если передан пустой массив
+    if (Array.isArray(images) && images.length === 0) {
+        return { images: [] }
+    }
+
+    // Если передан массив
+    if (Array.isArray(images)) {
+        const validatedImages = []
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i]
+
+            // Каждый элемент должен быть объектом
+            if (!img || typeof img !== 'object' || Array.isArray(img)) {
+                return { error: `Элемент ${i} массива images должен быть объектом с полями imageOrg и imageThumbnail` }
+            }
+
+            const { imageOrg, imageThumbnail } = img
+
+            // Оба поля должны быть строками
+            if (imageOrg === undefined || imageOrg === null || typeof imageOrg !== 'string') {
+                return { error: `Элемент ${i}: поле imageOrg обязательно и должно быть строкой` }
+            }
+
+            if (imageThumbnail === undefined || imageThumbnail === null || typeof imageThumbnail !== 'string') {
+                return { error: `Элемент ${i}: поле imageThumbnail обязательно и должно быть строкой` }
+            }
+
+            const trimmedOrg = imageOrg.trim()
+            const trimmedThumb = imageThumbnail.trim()
+
+            // Проверяем, что после trim строки не пустые
+            if (!trimmedOrg || !trimmedThumb) {
+                return { error: `Элемент ${i}: поля imageOrg и imageThumbnail не могут быть пустыми` }
+            }
+
+            validatedImages.push({
+                imageOrg: trimmedOrg,
+                imageThumbnail: trimmedThumb
+            })
+        }
+
+        return { images: validatedImages }
+    }
+
+    return { error: 'Поле images должно быть массивом объектов с полями imageOrg и imageThumbnail' }
+}
+
+// Функция для удаления всех изображений из массива
+async function deleteImagesArray(imagesArray) {
+    if (!Array.isArray(imagesArray) || imagesArray.length === 0) {
+        return
+    }
+
+    const deletePromises = imagesArray.map(img => {
+        if (img && img.imageOrg && img.imageThumbnail) {
+            return deleteImages(img.imageOrg, img.imageThumbnail)
+        }
+        return Promise.resolve()
+    })
+
+    await Promise.all(deletePromises)
+}
+
 // ========== TYPES (Типы позиций) ==========
 export const getMenuItemTypes = async (request, reply) => {
     try {
@@ -417,8 +487,7 @@ export const createMenuItem = async (request, reply) => {
             volume,
             order,
             tagIds,
-            imageOriginal,
-            imageThumbnail
+            images
         } = request.body
 
         if (!name || !typeIds) {
@@ -487,6 +556,12 @@ export const createMenuItem = async (request, reply) => {
             }
         }
 
+        // Валидация и нормализация изображений
+        const imagesValidation = validateAndNormalizeImages(images)
+        if (imagesValidation.error) {
+            return reply.status(400).send({ error: imagesValidation.error })
+        }
+
         const item = await prisma.menuItem.create({
             data: {
                 name: name.trim(),
@@ -496,8 +571,7 @@ export const createMenuItem = async (request, reply) => {
                 quantity: quantity ? Number(quantity) : null,
                 volume: volumeArray,
                 order: itemOrder,
-                imageOriginal: imageOriginal?.trim() || null,
-                imageThumbnail: imageThumbnail?.trim() || null,
+                images: imagesValidation.images,
                 types: {
                     connect: typeIdsArray.map(id => ({ id }))
                 },
@@ -542,9 +616,7 @@ export const updateMenuItem = async (request, reply) => {
             order,
             active,
             tagIds,
-            imageOriginal,
-            imageThumbnail,
-            deleteImage
+            images
         } = request.body
 
         const updateData = {}
@@ -576,25 +648,30 @@ export const updateMenuItem = async (request, reply) => {
         if (active !== undefined) updateData.active = active === 'true' || active === true
 
         // Обработка изображений
-        if (deleteImage === true || deleteImage === 'true') {
-            // Удаляем старые изображения
-            if (item.imageOriginal || item.imageThumbnail) {
-                await deleteImages(item.imageOriginal, item.imageThumbnail)
+        if (images !== undefined) {
+            const imagesValidation = validateAndNormalizeImages(images)
+            if (imagesValidation.error) {
+                return reply.status(400).send({ error: imagesValidation.error })
             }
-            updateData.imageOriginal = null
-            updateData.imageThumbnail = null
-        } else if (imageOriginal !== undefined || imageThumbnail !== undefined) {
-            // Если переданы новые URL изображений, удаляем старые (если они были)
-            if ((imageOriginal !== undefined && imageOriginal !== item.imageOriginal) ||
-                (imageThumbnail !== undefined && imageThumbnail !== item.imageThumbnail)) {
-                // Удаляем старые изображения только если новые отличаются
-                if (item.imageOriginal || item.imageThumbnail) {
-                    await deleteImages(item.imageOriginal, item.imageThumbnail)
-                }
+
+            // Получаем старые изображения
+            const oldImages = Array.isArray(item.images) ? item.images : []
+            const newImages = imagesValidation.images
+
+            // Находим изображения, которые нужно удалить (те, которых нет в новом массиве)
+            const imagesToDelete = oldImages.filter(oldImg => {
+                return !newImages.some(newImg =>
+                    newImg.imageOrg === oldImg.imageOrg &&
+                    newImg.imageThumbnail === oldImg.imageThumbnail
+                )
+            })
+
+            // Удаляем файлы изображений, которые больше не используются
+            if (imagesToDelete.length > 0) {
+                await deleteImagesArray(imagesToDelete)
             }
-            // Устанавливаем новые URL
-            if (imageOriginal !== undefined) updateData.imageOriginal = imageOriginal?.trim() || null
-            if (imageThumbnail !== undefined) updateData.imageThumbnail = imageThumbnail?.trim() || null
+
+            updateData.images = newImages
         }
 
         // Обработка типов (many-to-many, всегда массив)
@@ -710,9 +787,11 @@ export const deleteMenuItem = async (request, reply) => {
             return reply.status(404).send({ error: 'Позиция не найдена' })
         }
 
-        // Удаляем изображения
-        if (item.imageOriginal || item.imageThumbnail) {
-            await deleteImages(item.imageOriginal, item.imageThumbnail)
+        // Удаляем все изображения из массива (файлы с диска)
+        if (item.images) {
+            if (Array.isArray(item.images) && item.images.length > 0) {
+                await deleteImagesArray(item.images)
+            }
         }
 
         // Сдвигаем order остальных позиций вверх
