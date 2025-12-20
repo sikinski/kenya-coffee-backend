@@ -241,3 +241,113 @@ export const deleteDailyTask = async (request, reply) => {
         return reply.status(500).send({ error: 'Ошибка удаления ежедневной задачи' })
     }
 }
+
+// Синхронизация сегодняшнего чеклиста с шаблоном задач
+export const syncTodayChecklist = async (request, reply) => {
+    try {
+        const today = dayjs().tz(TZ).startOf('day').toDate()
+
+        // Получаем все активные задачи из шаблона, отсортированные по order
+        const activeTasks = await prisma.task.findMany({
+            where: { active: true },
+            orderBy: { order: 'asc' }
+        })
+
+        // Получаем все ежедневные задачи на сегодня
+        const todayDailyTasks = await prisma.dailyTask.findMany({
+            where: { date: today },
+            include: { task: true }
+        })
+
+        // Создаем мапу существующих ежедневных задач по taskId
+        const dailyTasksMap = new Map(todayDailyTasks.map(dt => [dt.taskId, dt]))
+
+        // Массивы для операций
+        const tasksToCreate = []
+        const tasksToDelete = []
+
+        // 1. Проходим по активным задачам из шаблона
+        for (const task of activeTasks) {
+            const existingDailyTask = dailyTasksMap.get(task.id)
+
+            if (!existingDailyTask) {
+                // Задачи нет в сегодняшнем чеклисте - создаем
+                tasksToCreate.push({
+                    date: today,
+                    taskId: task.id,
+                    done: false
+                })
+            }
+            // Если задача уже есть, ничего не делаем (сохраняем её состояние done и userId)
+        }
+
+        // 2. Проходим по существующим ежедневным задачам
+        for (const dailyTask of todayDailyTasks) {
+            const taskExistsInTemplate = activeTasks.some(t => t.id === dailyTask.taskId)
+
+            if (!taskExistsInTemplate) {
+                // Задачи нет в шаблоне
+                // Удаляем только если done: false (невыполненные задачи можно удалить)
+                if (!dailyTask.done) {
+                    tasksToDelete.push(dailyTask.id)
+                }
+                // Если done: true - оставляем (не удаляем выполненные задачи)
+            }
+        }
+
+        // Выполняем операции
+        const results = {
+            created: 0,
+            deleted: 0,
+            kept: 0
+        }
+
+        if (tasksToCreate.length > 0) {
+            await prisma.dailyTask.createMany({
+                data: tasksToCreate
+            })
+            results.created = tasksToCreate.length
+        }
+
+        if (tasksToDelete.length > 0) {
+            await prisma.dailyTask.deleteMany({
+                where: { id: { in: tasksToDelete } }
+            })
+            results.deleted = tasksToDelete.length
+        }
+
+        // Подсчитываем, сколько задач оставлено (выполненные, которых нет в шаблоне)
+        results.kept = todayDailyTasks.filter(dt => {
+            const taskExistsInTemplate = activeTasks.some(t => t.id === dt.taskId)
+            return !taskExistsInTemplate && dt.done
+        }).length
+
+        // Получаем обновленный список задач на сегодня
+        const updatedDailyTasks = await prisma.dailyTask.findMany({
+            where: { date: today },
+            include: {
+                task: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                task: {
+                    order: 'asc'
+                }
+            }
+        })
+
+        return reply.status(200).send({
+            success: true,
+            results,
+            dailyTasks: updatedDailyTasks
+        })
+    } catch (err) {
+        console.error(err)
+        return reply.status(500).send({ error: 'Ошибка синхронизации чеклиста' })
+    }
+}

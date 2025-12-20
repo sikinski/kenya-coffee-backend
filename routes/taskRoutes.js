@@ -6,7 +6,8 @@ import {
     deleteTask,
     getDailyTasks,
     updateDailyTask,
-    deleteDailyTask
+    deleteDailyTask,
+    syncTodayChecklist
 } from "../controllers/taskController.js";
 
 export default async function (fastify) {
@@ -35,4 +36,7 @@ export default async function (fastify) {
 
     // DELETE /daily-tasks/:id — удалить ежедневную задачу
     fastify.delete("/daily-tasks/:id", { preHandler: [fastify.authenticate] }, deleteDailyTask);
+
+    // POST /daily-tasks/sync — синхронизировать сегодняшний чеклист с шаблоном задач
+    fastify.post("/daily-tasks/sync", { preHandler: [fastify.authenticate] }, syncTodayChecklist);
 }
