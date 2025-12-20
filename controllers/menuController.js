@@ -1,6 +1,62 @@
 import prisma from '../config/db.js'
 import { deleteImages } from '../utils/imageProcessor.js'
 
+// Функция для валидации и нормализации цены
+function validateAndNormalizePrice(price) {
+    // Если price не передан, возвращаем ошибку
+    if (price === undefined || price === null) {
+        return { error: 'Поле price обязательно' }
+    }
+
+    // Если price - это объект
+    if (typeof price === 'object' && !Array.isArray(price)) {
+        const { from, to } = price
+
+        // Хотя бы одно поле должно быть заполнено
+        if (from === null && to === null) {
+            return { error: 'Необходимо указать хотя бы одно поле: from или to' }
+        }
+
+        // Валидация from
+        let fromValue = null
+        if (from !== null && from !== undefined && from !== '') {
+            const fromNum = Number(from)
+            if (isNaN(fromNum) || fromNum < 0) {
+                return { error: 'Поле from должно быть положительным числом' }
+            }
+            fromValue = fromNum
+        }
+
+        // Валидация to
+        let toValue = null
+        if (to !== null && to !== undefined && to !== '') {
+            const toNum = Number(to)
+            if (isNaN(toNum) || toNum < 0) {
+                return { error: 'Поле to должно быть положительным числом' }
+            }
+            toValue = toNum
+        }
+
+        // Если оба значения заданы, проверяем что from <= to
+        if (fromValue !== null && toValue !== null && fromValue > toValue) {
+            return { error: 'Значение from не может быть больше to' }
+        }
+
+        return { price: { from: fromValue, to: toValue } }
+    }
+
+    // Если передано просто число (для обратной совместимости)
+    if (typeof price === 'number' || (typeof price === 'string' && !isNaN(price))) {
+        const numPrice = Number(price)
+        if (numPrice < 0) {
+            return { error: 'Цена должна быть положительным числом' }
+        }
+        return { price: { from: numPrice, to: numPrice } }
+    }
+
+    return { error: 'Поле price должно быть объектом с полями from и to, или числом' }
+}
+
 // ========== TYPES (Типы позиций) ==========
 export const getMenuItemTypes = async (request, reply) => {
     try {
@@ -16,16 +72,29 @@ export const getMenuItemTypes = async (request, reply) => {
 
 export const createMenuItemType = async (request, reply) => {
     try {
-        const { name, description, order } = request.body
+        const { name, description, order, icon } = request.body
 
         if (!name || !name.trim()) {
             return reply.status(400).send({ error: 'Название типа обязательно' })
+        }
+
+        // Валидация icon: должен быть SVG data URI или null/undefined (поле необязательное)
+        let iconValue = null
+        if (icon !== undefined && icon !== null && icon !== '') {
+            const iconStr = String(icon).trim()
+            // Проверяем, что это data URI для SVG
+            if (iconStr.startsWith('data:image/svg+xml')) {
+                iconValue = iconStr
+            } else {
+                return reply.status(400).send({ error: 'Иконка должна быть в формате SVG data URI (data:image/svg+xml;base64,...)' })
+            }
         }
 
         const type = await prisma.menuItemType.create({
             data: {
                 name: name.trim(),
                 description: description?.trim() || null,
+                icon: iconValue,
                 order: order !== undefined ? Number(order) : 0
             }
         })
@@ -43,7 +112,7 @@ export const createMenuItemType = async (request, reply) => {
 export const updateMenuItemType = async (request, reply) => {
     try {
         const { id } = request.params
-        const { name, description, order } = request.body
+        const { name, description, order, icon } = request.body
 
         const type = await prisma.menuItemType.findUnique({ where: { id: Number(id) } })
         if (!type) {
@@ -54,6 +123,21 @@ export const updateMenuItemType = async (request, reply) => {
         if (name !== undefined) updateData.name = name.trim()
         if (description !== undefined) updateData.description = description?.trim() || null
         if (order !== undefined) updateData.order = Number(order)
+
+        // Обработка icon: должен быть SVG data URI или null (поле необязательное)
+        if (icon !== undefined) {
+            if (icon === null || icon === '') {
+                updateData.icon = null
+            } else {
+                const iconStr = String(icon).trim()
+                // Проверяем, что это data URI для SVG
+                if (iconStr.startsWith('data:image/svg+xml')) {
+                    updateData.icon = iconStr
+                } else {
+                    return reply.status(400).send({ error: 'Иконка должна быть в формате SVG data URI (data:image/svg+xml;base64,...)' })
+                }
+            }
+        }
 
         const updated = await prisma.menuItemType.update({
             where: { id: Number(id) },
@@ -111,16 +195,42 @@ export const getMenuTags = async (request, reply) => {
 
 export const createMenuTag = async (request, reply) => {
     try {
-        const { name, color, category } = request.body
+        const { name, color, category, icon } = request.body
 
         if (!name || !name.trim()) {
             return reply.status(400).send({ error: 'Название тега обязательно' })
         }
 
+        // Валидация color: должен быть hex значение или null/undefined (поле необязательное)
+        let colorValue = null
+        if (color !== undefined && color !== null && color !== '') {
+            const colorStr = String(color).trim()
+            // Проверяем формат hex цвета (#RRGGBB или #RGB)
+            const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+            if (hexColorRegex.test(colorStr)) {
+                colorValue = colorStr
+            } else {
+                return reply.status(400).send({ error: 'Цвет должен быть в формате hex (например, #FF0000 или #F00)' })
+            }
+        }
+
+        // Валидация icon: должен быть SVG data URI или null/undefined (поле необязательное)
+        let iconValue = null
+        if (icon !== undefined && icon !== null && icon !== '') {
+            const iconStr = String(icon).trim()
+            // Проверяем, что это data URI для SVG
+            if (iconStr.startsWith('data:image/svg+xml')) {
+                iconValue = iconStr
+            } else {
+                return reply.status(400).send({ error: 'Иконка должна быть в формате SVG data URI (data:image/svg+xml;base64,...)' })
+            }
+        }
+
         const tag = await prisma.menuTag.create({
             data: {
                 name: name.trim(),
-                color: color?.trim() || null,
+                color: colorValue,
+                icon: iconValue,
                 category: category?.trim() || null
             }
         })
@@ -138,7 +248,7 @@ export const createMenuTag = async (request, reply) => {
 export const updateMenuTag = async (request, reply) => {
     try {
         const { id } = request.params
-        const { name, color, category } = request.body
+        const { name, color, category, icon } = request.body
 
         const tag = await prisma.menuTag.findUnique({ where: { id: Number(id) } })
         if (!tag) {
@@ -147,7 +257,38 @@ export const updateMenuTag = async (request, reply) => {
 
         const updateData = {}
         if (name !== undefined) updateData.name = name.trim()
-        if (color !== undefined) updateData.color = color?.trim() || null
+
+        // Обработка color: должен быть hex значение или null (поле необязательное)
+        if (color !== undefined) {
+            if (color === null || color === '') {
+                updateData.color = null
+            } else {
+                const colorStr = String(color).trim()
+                // Проверяем формат hex цвета (#RRGGBB или #RGB)
+                const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+                if (hexColorRegex.test(colorStr)) {
+                    updateData.color = colorStr
+                } else {
+                    return reply.status(400).send({ error: 'Цвет должен быть в формате hex (например, #FF0000 или #F00)' })
+                }
+            }
+        }
+
+        // Обработка icon: должен быть SVG data URI или null (поле необязательное)
+        if (icon !== undefined) {
+            if (icon === null || icon === '') {
+                updateData.icon = null
+            } else {
+                const iconStr = String(icon).trim()
+                // Проверяем, что это data URI для SVG
+                if (iconStr.startsWith('data:image/svg+xml')) {
+                    updateData.icon = iconStr
+                } else {
+                    return reply.status(400).send({ error: 'Иконка должна быть в формате SVG data URI (data:image/svg+xml;base64,...)' })
+                }
+            }
+        }
+
         if (category !== undefined) updateData.category = category?.trim() || null
 
         const updated = await prisma.menuTag.update({
@@ -280,10 +421,16 @@ export const createMenuItem = async (request, reply) => {
             imageThumbnail
         } = request.body
 
-        if (!name || !price || !typeIds) {
+        if (!name || !typeIds) {
             return reply.status(400).send({
-                error: 'Поля name, price и typeIds обязательны'
+                error: 'Поля name и typeIds обязательны'
             })
+        }
+
+        // Валидация и нормализация цены
+        const priceValidation = validateAndNormalizePrice(price)
+        if (priceValidation.error) {
+            return reply.status(400).send({ error: priceValidation.error })
         }
 
         // Парсим типы (всегда массив)
@@ -328,14 +475,26 @@ export const createMenuItem = async (request, reply) => {
             itemOrder = lastItem ? lastItem.order + 1 : 0
         }
 
+        // Обрабатываем volume как массив строк
+        let volumeArray = []
+        if (Array.isArray(volume)) {
+            volumeArray = volume.map(v => String(v).trim()).filter(v => v.length > 0)
+        } else if (volume !== undefined && volume !== null) {
+            // Если передана строка (для обратной совместимости), преобразуем в массив
+            const trimmed = String(volume).trim()
+            if (trimmed.length > 0) {
+                volumeArray = [trimmed]
+            }
+        }
+
         const item = await prisma.menuItem.create({
             data: {
                 name: name.trim(),
                 description: description?.trim() || null,
-                price: Number(price),
+                price: priceValidation.price,
                 discountPrice: discountPrice ? Number(discountPrice) : null,
                 quantity: quantity ? Number(quantity) : null,
-                volume: volume?.trim() || null,
+                volume: volumeArray,
                 order: itemOrder,
                 imageOriginal: imageOriginal?.trim() || null,
                 imageThumbnail: imageThumbnail?.trim() || null,
@@ -391,10 +550,29 @@ export const updateMenuItem = async (request, reply) => {
         const updateData = {}
         if (name !== undefined) updateData.name = name.trim()
         if (description !== undefined) updateData.description = description?.trim() || null
-        if (price !== undefined) updateData.price = Number(price)
+
+        // Обработка цены
+        if (price !== undefined) {
+            const priceValidation = validateAndNormalizePrice(price)
+            if (priceValidation.error) {
+                return reply.status(400).send({ error: priceValidation.error })
+            }
+            updateData.price = priceValidation.price
+        }
         if (discountPrice !== undefined) updateData.discountPrice = discountPrice ? Number(discountPrice) : null
         if (quantity !== undefined) updateData.quantity = quantity ? Number(quantity) : null
-        if (volume !== undefined) updateData.volume = volume?.trim() || null
+        if (volume !== undefined) {
+            // Обрабатываем volume как массив строк
+            if (Array.isArray(volume)) {
+                updateData.volume = volume.map(v => String(v).trim()).filter(v => v.length > 0)
+            } else if (volume === null) {
+                updateData.volume = []
+            } else {
+                // Если передана строка (для обратной совместимости), преобразуем в массив
+                const trimmed = String(volume).trim()
+                updateData.volume = trimmed.length > 0 ? [trimmed] : []
+            }
+        }
         if (active !== undefined) updateData.active = active === 'true' || active === true
 
         // Обработка изображений
