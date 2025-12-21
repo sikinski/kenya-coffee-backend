@@ -38,7 +38,23 @@ const frontendUrls = process.env.FRONTEND_URL
     : ['http://localhost:3000', 'http://localhost:3001'] // дефолтные значения для разработки
 
 await fastify.register(cors, {
-    origin: frontendUrls, // массив фронтендов
+    origin: (origin, callback) => {
+        // Разрешаем запросы без origin (например, Postman, curl)
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        // Проверяем, есть ли origin в списке разрешенных
+        if (frontendUrls.includes(origin)) {
+            return callback(null, true);
+        }
+
+        // Логируем для отладки
+        console.log('CORS blocked origin:', origin);
+        console.log('Allowed origins:', frontendUrls);
+
+        return callback(new Error('Not allowed by CORS'), false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
     allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
     credentials: true

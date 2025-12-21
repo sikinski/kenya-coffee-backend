@@ -18,7 +18,9 @@ services:
       # Другие переменные окружения (если есть)
       AQSI_URL: ${AQSI_URL:-}
       AQSI_KEY: ${AQSI_KEY:-}
-      # Фронтенды через запятую: сайт и админка (например: "http://localhost:3000,http://localhost:3001")
+      # Фронтенды через запятую: сайт и админка
+      # Для продакшена: "https://kenya-coffee.ru,https://admin.kenya-coffee.ru"
+      # Для разработки: "http://localhost:3000,http://localhost:3001"
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000,http://localhost:3001}
     depends_on:
       - db
