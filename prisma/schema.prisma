@@ -149,6 +149,21 @@ model Menu {
   // Актуальные позиции - это MenuItem с active=true
 }
 
+model Contact {
+  id            Int      @id @default(autoincrement())
+  phone         String?
+  address       String?
+  mapLink       String?
+  workingHours  Json?    // массив строк
+  vkLink        String?
+  telegramLink  String?
+  whatsappLink  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Храним только одну запись контактов (синглтон)
+}
+
 // revenue,        // 💰 общая выручка за период
 //         avgCheck,       // 📈 средний чек
 //         receiptsCount,  // 🧾 количество чеков
