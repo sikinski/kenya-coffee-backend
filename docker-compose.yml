@@ -20,9 +20,9 @@ services:
       # Другие переменные окружения
       AQSI_URL: ${AQSI_URL:-}
       AQSI_KEY: ${AQSI_KEY:-}
-      # CORS - используем CORS_ORIGIN из .env, если есть, иначе объединяем FRONTEND_URL и ADMIN_URL
+      # CORS - используем CORS_ORIGIN из .env (приоритетно)
       # В .env укажите: CORS_ORIGIN=https://kenya-coffee.ru,https://admin.kenya-coffee.ru
-      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL:-https://kenya-coffee.ru},${ADMIN_URL:-https://admin.kenya-coffee.ru}}
+      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL}}
     depends_on:
       db:
         condition: service_healthy
