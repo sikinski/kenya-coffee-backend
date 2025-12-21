@@ -412,7 +412,7 @@ export const getMenuItems = async (request, reply) => {
                 where.types = { some: { id: { in: typeIdsArray } } }
             }
         }
-        
+
         // Если запрос без токена - показываем только active:true
         // Если с токеном - показываем все (или то, что указано в query)
         if (!request.user) {
@@ -420,7 +420,7 @@ export const getMenuItems = async (request, reply) => {
         } else if (active !== undefined) {
             where.active = active === 'true'
         }
-        
+
         if (tagIds) {
             const tagIdsArray = tagIds.split(',').map(id => Number(id.trim())).filter(Boolean)
             if (tagIdsArray.length > 0) {

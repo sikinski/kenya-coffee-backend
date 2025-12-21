@@ -32,8 +32,13 @@ const fastify = Fastify({ logger: true });
 await fastify.register(authPlugin);
 
 // Регаем корсы
+// Поддерживаем несколько фронтендов через запятую (например: "http://localhost:3000,http://localhost:3001")
+const frontendUrls = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(url => url.trim()).filter(Boolean)
+    : ['http://localhost:3000', 'http://localhost:3001'] // дефолтные значения для разработки
+
 await fastify.register(cors, {
-    origin: process.env.FRONTEND_URL, // твой фронт
+    origin: frontendUrls, // массив фронтендов
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // разрешаем методы
     allowedHeaders: ["Content-Type", "Authorization"], // чтобы токен проходил
     credentials: true
@@ -51,18 +56,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 await fastify.register(staticFiles, {
     root: join(__dirname, 'uploads'),
-    prefix: '/uploads/'
+    prefix: '/backend/uploads/'
 });
 
-// Регистрируем роуты
-fastify.register(authRoutes);
-fastify.register(taskRoutes);
-fastify.register(noteRoutes);
-fastify.register(userRoutes);
-fastify.register(aqsiRoutes);
-fastify.register(menuRoutes);
-fastify.register(contactsRoutes);
-fastify.register(faqRoutes);
+// Регистрируем роуты с префиксом /backend
+await fastify.register(async function (fastify) {
+    fastify.register(authRoutes);
+    fastify.register(taskRoutes);
+    fastify.register(noteRoutes);
+    fastify.register(userRoutes);
+    fastify.register(aqsiRoutes);
+    fastify.register(menuRoutes);
+    fastify.register(contactsRoutes);
+    fastify.register(faqRoutes);
+}, { prefix: '/backend' });
 
 
 const start = async () => {
