@@ -27,7 +27,23 @@ dotenv.config();
 const HOST = process.env.HOST || 'localhost'
 const PORT = process.env.PORT || 3000
 
-const fastify = Fastify({ logger: true });
+// Настраиваем логгер: только ошибки и важные события, без тел запросов/ответов
+const fastify = Fastify({
+    logger: {
+        level: 'error', // Только ошибки
+        serializers: {
+            req: (req) => ({
+                method: req.method,
+                url: req.url,
+                // Не логируем body и headers для уменьшения размера логов
+            }),
+            res: (res) => ({
+                statusCode: res.statusCode,
+                // Не логируем body ответа
+            }),
+        }
+    }
+});
 
 await fastify.register(authPlugin);
 
@@ -36,11 +52,6 @@ await fastify.register(authPlugin);
 const frontendUrls = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map(url => url.trim()).filter(Boolean)
     : ['http://localhost:3000', 'http://localhost:3001'] // дефолтные значения для разработки
-
-// Логируем настройки CORS при старте
-console.log('CORS configuration:');
-console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
-console.log('Allowed origins:', frontendUrls);
 
 await fastify.register(cors, {
     origin: (origin, callback) => {
@@ -54,14 +65,8 @@ await fastify.register(cors, {
             return callback(null, true);
         }
 
-        // Логируем для отладки
+        // Логируем только при блокировке (для отладки)
         console.log('❌ CORS blocked origin:', origin);
-        console.log('✅ Allowed origins:', frontendUrls);
-        console.log('🔍 Origin check:', {
-            origin,
-            inList: frontendUrls.includes(origin),
-            frontendUrlsCount: frontendUrls.length
-        });
 
         return callback(new Error('Not allowed by CORS'), false);
     },

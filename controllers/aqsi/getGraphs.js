@@ -54,7 +54,6 @@ async function getFilteredReceipts(request, dates) {
 
 export const getSalesGraph = async (request, reply) => {
     try {
-        console.log(request.query);
         const queryString = request.raw.url.split('?')[1] || ''
         const query = qs.parse(queryString, { allowDots: true })
         const dates = query.dates || {}
@@ -78,8 +77,6 @@ export const getSalesGraph = async (request, reply) => {
 
 export const getProductsGraph = async (request, reply) => {
     try {
-        console.log(request.query);
-
         const productTypeObj = productTypes.find(obj => obj.type === request.query.product_type)
         if (!productTypeObj) {
             return reply.status(400).send({ error: 'Неверный тип продукта' })
@@ -115,8 +112,6 @@ export const getProductsGraph = async (request, reply) => {
                 })
             })
         }
-        console.log(filteredReceipts);
-
 
         // --- Считаем статистику по продуктам ---
         const productStats = {}
@@ -138,8 +133,6 @@ export const getProductsGraph = async (request, reply) => {
                 })
             })
         })
-        console.log(productStats);
-
 
         // Преобразуем в нужный формат (возвращаем оригинальные названия продуктов)
         const result = Object.entries(productStats).map(([name, count]) => ({
@@ -199,14 +192,8 @@ function getUniqueProducts(receipts) {
     const products = receipts.map(receiptObj => [...receiptObj.raw.content.positions])
         .flat(1); // или .flat()
 
-    console.log('Products:', products);
-
     let textProducts = products.map(product => product.text);
-    console.log('Text products:', textProducts);
-
     let uniqueProducts = new Set(textProducts);
-    console.log('Unique products:', uniqueProducts);
-    console.log('Array from Set:', Array.from(uniqueProducts));
 
     return Array.from(uniqueProducts)
 }

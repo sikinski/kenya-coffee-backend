@@ -12,8 +12,6 @@ const TZ = 'Asia/Yekaterinburg'
 // Генерируем ежедневные задачи в 00:00 по времени Челябинска
 cron.schedule('0 0 * * *', async () => {
     try {
-        console.log('🔄 Генерируем ежедневные задачи...', new Date().toISOString())
-
         const today = dayjs().tz(TZ).startOf('day').toDate()
 
         // Получаем все активные задачи
@@ -23,7 +21,6 @@ cron.schedule('0 0 * * *', async () => {
         })
 
         if (activeTasks.length === 0) {
-            console.log('ℹ️  Нет активных задач для создания')
             return
         }
 
@@ -48,9 +45,6 @@ cron.schedule('0 0 * * *', async () => {
             await prisma.dailyTask.createMany({
                 data: tasksToCreate
             })
-            console.log(`✅ Создано ${tasksToCreate.length} ежедневных задач`)
-        } else {
-            console.log('ℹ️  Все задачи уже созданы на сегодня')
         }
 
     } catch (err) {
@@ -59,6 +53,4 @@ cron.schedule('0 0 * * *', async () => {
 }, {
     timezone: TZ
 })
-
-console.log('📅 Cron для генерации ежедневных задач запущен (00:00 по времени Челябинска)')
 

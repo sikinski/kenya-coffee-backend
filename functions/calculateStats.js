@@ -62,7 +62,6 @@ export async function calculateStats(request, dates) {
     })
 
     if (cached) {
-        console.log('✅ Возвращаю кэшированные данные')
         return cached
     }
 

@@ -12,8 +12,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
     while (true) {
         const queryString = `?page=${page}&pageSize=100&filtered.beginDate=${beginDate.toISOString()}&filtered.endDate=${endDate.toISOString()}&sorted=${encodeURIComponent(JSON.stringify([{ id: 'processedAt', desc: false }]))}`
 
-        console.log('>>> AQSI запрос:', queryString)
-
         let response;
         try {
             response = await axios.get(`${AQSI_URL}/v2/Receipts${queryString}`, {
@@ -41,8 +39,6 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
         const newReceipts = data.rows.filter(r => !existingIds.has(r.id))
 
         if (newReceipts.length > 0) {
-            console.log('Have new receipts');
-
             const savingData = newReceipts.map(r => {
                 return {
                     aqsiId: r.id, // сохраняем ID от AQSI в поле aqsiId
@@ -58,10 +54,7 @@ export async function loadReceiptsForPeriod(beginDate, endDate) {
 
             sendSocketReceipt(savingData)
             hasReceipts = true
-
         }
-
-        console.log(`Загружена страница ${page}, новых чеков: ${newReceipts.length}`)
 
         if (data.pages && page >= data.pages) break
         if (!newReceipts?.length) break;
