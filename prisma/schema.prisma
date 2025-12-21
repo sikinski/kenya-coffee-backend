@@ -164,6 +164,19 @@ model Contact {
   // Храним только одну запись контактов (синглтон)
 }
 
+model FAQ {
+  id        Int      @id @default(autoincrement())
+  question  String   // вопрос
+  answer    String   // ответ
+  order     Int      @default(0) // порядок отображения
+  active    Boolean  @default(true) // активен ли FAQ
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+  @@index([active])
+}
+
 // revenue,        // 💰 общая выручка за период
 //         avgCheck,       // 📈 средний чек
 //         receiptsCount,  // 🧾 количество чеков

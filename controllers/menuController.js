@@ -412,7 +412,15 @@ export const getMenuItems = async (request, reply) => {
                 where.types = { some: { id: { in: typeIdsArray } } }
             }
         }
-        if (active !== undefined) where.active = active === 'true'
+        
+        // Если запрос без токена - показываем только active:true
+        // Если с токеном - показываем все (или то, что указано в query)
+        if (!request.user) {
+            where.active = true
+        } else if (active !== undefined) {
+            where.active = active === 'true'
+        }
+        
         if (tagIds) {
             const tagIdsArray = tagIds.split(',').map(id => Number(id.trim())).filter(Boolean)
             if (tagIdsArray.length > 0) {
@@ -819,9 +827,13 @@ export const getMenu = async (request, reply) => {
             })
         }
 
-        // Получаем все активные позиции
+        // Если запрос без токена - показываем только active:true
+        // Если с токеном - показываем все позиции
+        const where = request.user ? {} : { active: true }
+
+        // Получаем позиции
         const items = await prisma.menuItem.findMany({
-            where: { active: true },
+            where,
             include: {
                 types: true,
                 tags: true

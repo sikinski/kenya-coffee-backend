@@ -15,6 +15,7 @@ import userRoutes from "./routes/userRoutes.js";
 import aqsiRoutes from "./routes/aqsiRoutes.js";
 import menuRoutes from "./routes/menuRoutes.js";
 import contactsRoutes from "./routes/contactsRoutes.js";
+import faqRoutes from "./routes/faqRoutes.js";
 import './cron/receiptsUpdater.js'
 import './cron/dailyTasksGenerator.js'
 
@@ -61,6 +62,7 @@ fastify.register(userRoutes);
 fastify.register(aqsiRoutes);
 fastify.register(menuRoutes);
 fastify.register(contactsRoutes);
+fastify.register(faqRoutes);
 
 
 const start = async () => {

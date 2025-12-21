@@ -4,7 +4,7 @@ async function seedContacts() {
     try {
         // Проверяем, есть ли уже контакты
         const existing = await prisma.contact.findFirst()
-        
+
         if (existing) {
             console.log('Контакты уже существуют, пропускаем создание')
             return

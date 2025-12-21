@@ -57,8 +57,8 @@ export const updateContacts = async (request, reply) => {
         const existing = await prisma.contact.findFirst()
 
         // Валидация workingHours - должен быть массив или null
-        const workingHoursArray = workingHours === null || workingHours === undefined 
-            ? null 
+        const workingHoursArray = workingHours === null || workingHours === undefined
+            ? null
             : (Array.isArray(workingHours) ? (workingHours.length > 0 ? workingHours : null) : null)
 
         // Обновляем контакты используя upsert
@@ -88,7 +88,7 @@ export const updateContacts = async (request, reply) => {
         })
     } catch (err) {
         console.error('Ошибка обновления контактов:', err)
-        return reply.status(500).send({ 
+        return reply.status(500).send({
             error: 'Ошибка обновления контактов',
             details: err.message || String(err)
         })
