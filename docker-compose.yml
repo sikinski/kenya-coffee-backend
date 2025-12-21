@@ -2,24 +2,30 @@ version: "3.8"
 
 services:
   backend:
-    container_name: backend
+    container_name: kenya_coffee_backend
     build: .
     ports:
-      - "3000:3000"
+      - "3002:3002"
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      # Порт сервера
+      PORT: 3002
+      HOST: 0.0.0.0
+      # База данных - собираем DATABASE_URL из переменных
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
+      # JWT секреты
       ACCESS_SECRET: ${ACCESS_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
+      # Другие переменные окружения (если есть)
+      AQSI_URL: ${AQSI_URL:-}
+      AQSI_KEY: ${AQSI_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-}
     depends_on:
       - db
+    restart: unless-stopped
 
   db:
     image: postgres:15
-    container_name: backend_db
+    container_name: kenya_coffee_backend_db
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
@@ -29,6 +35,11 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_data:
