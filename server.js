@@ -56,21 +56,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 await fastify.register(staticFiles, {
     root: join(__dirname, 'uploads'),
-    prefix: '/backend/uploads/'
+    prefix: '/uploads/'
 });
 
-// Регистрируем роуты с префиксом /backend
-await fastify.register(async function (fastify) {
-    fastify.register(authRoutes);
-    fastify.register(taskRoutes);
-    fastify.register(noteRoutes);
-    fastify.register(userRoutes);
-    fastify.register(aqsiRoutes);
-    fastify.register(menuRoutes);
-    fastify.register(contactsRoutes);
-    fastify.register(faqRoutes);
-}, { prefix: '/backend' });
-
+// Регистрируем роуты
+fastify.register(authRoutes);
+fastify.register(taskRoutes);
+fastify.register(noteRoutes);
+fastify.register(userRoutes);
+fastify.register(aqsiRoutes);
+fastify.register(menuRoutes);
+fastify.register(contactsRoutes);
+fastify.register(faqRoutes);
 
 const start = async () => {
     try {
