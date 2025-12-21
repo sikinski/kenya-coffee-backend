@@ -54,14 +54,32 @@ const frontendUrls = frontendUrlString
     ? frontendUrlString.split(',').map(url => url.trim()).filter(Boolean)
     : ['http://localhost:3000', 'http://localhost:3001'] // дефолтные значения для разработки
 
-// Логируем настройки CORS при старте (для отладки)
-console.log('CORS configuration:');
-console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
-console.log('CORS_ORIGIN from env:', process.env.CORS_ORIGIN);
-console.log('Parsed allowed origins:', frontendUrls);
+// Логируем настройки CORS при старте (только для отладки, можно убрать в продакшене)
+if (process.env.NODE_ENV !== 'production') {
+    console.log('CORS configuration:');
+    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
+    console.log('CORS_ORIGIN from env:', process.env.CORS_ORIGIN);
+    console.log('Parsed allowed origins:', frontendUrls);
+}
 
 await fastify.register(cors, {
-    origin: frontendUrls, // Передаем массив напрямую
+    origin: (origin, callback) => {
+        // Разрешаем запросы без origin (например, Postman, curl, или серверные запросы)
+        if (!origin) {
+            return callback(null, true);
+        }
+
+        // Проверяем, есть ли origin в списке разрешенных
+        if (frontendUrls.includes(origin)) {
+            return callback(null, true);
+        }
+
+        // Логируем только при блокировке (для отладки)
+        console.log('❌ CORS blocked origin:', origin);
+        console.log('✅ Allowed origins:', frontendUrls);
+
+        return callback(new Error('Not allowed by CORS'), false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
