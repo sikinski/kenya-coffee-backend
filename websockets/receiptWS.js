@@ -22,12 +22,9 @@ export function setupReceiptWS(server) {
 
 // Функция для отправки новых чеков всем клиентам
 export function sendSocketReceipt(receipts) {
-    console.log('Sending receipts:', receipts); // <- проверь тут
     const data = JSON.stringify({ type: 'new_receipts', payload: receipts })
     receiptWSS.clients.forEach(client => {
-        console.log(client);
-
-        if (client.readyState === 1) client.send(data) // ✅ client, а не ws
+        if (client.readyState === 1) client.send(data)
     })
 }
 
