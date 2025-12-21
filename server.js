@@ -47,14 +47,6 @@ const fastify = Fastify({
 
 await fastify.register(authPlugin);
 
-// Добавляем хук для логирования всех запросов (для отладки CORS)
-fastify.addHook('onRequest', async (request, reply) => {
-    if (request.method === 'OPTIONS' || request.url.includes('/auth')) {
-        console.log(`[${request.method}] ${request.url}`);
-        console.log('Origin:', request.headers.origin);
-        console.log('Access-Control-Request-Method:', request.headers['access-control-request-method']);
-    }
-});
 
 // Регаем корсы
 // Используем CORS_ORIGIN из .env
@@ -79,8 +71,6 @@ await fastify.register(cors, {
 
         // Проверяем, есть ли origin в списке разрешенных
         if (frontendUrls.includes(origin)) {
-            // Логируем успешные CORS запросы для отладки
-            console.log('✅ CORS allowed origin:', origin);
             return callback(null, true);
         }
 
@@ -92,8 +82,7 @@ await fastify.register(cors, {
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    preflight: true // Явно включаем preflight обработку
+    credentials: true
 });
 
 // Регистрируем multipart для загрузки файлов
