@@ -11,19 +11,6 @@ echo "🔄 Running Prisma schema sync..."
 npx prisma db push --accept-data-loss --skip-generate
 
 echo "✅ Database schema synced!"
-
-echo "🌱 Running database seeds..."
-# Выполняем сиды (если они еще не выполнены)
-echo "  → Seeding users..."
-npm run seed:users || echo "  ⚠️  Users seed skipped or failed"
-
-echo "  → Seeding contacts..."
-node prisma/seed_contacts.js || echo "  ⚠️  Contacts seed skipped or failed"
-
-echo "  → Seeding receipts (this may take a while)..."
-npm run seed:receipts || echo "  ⚠️  Receipts seed skipped or failed"
-
-echo "✅ Seeds completed!"
 echo "🚀 Starting application..."
 # Запускаем приложение
 exec npm start
