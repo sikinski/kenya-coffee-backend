@@ -48,8 +48,8 @@ const fastify = Fastify({
 await fastify.register(authPlugin);
 
 // Регаем корсы
-// Поддерживаем несколько фронтендов через запятую
-const frontendUrlString = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || '';
+// Используем CORS_ORIGIN из .env
+const frontendUrlString = process.env.CORS_ORIGIN || '';
 const frontendUrls = frontendUrlString
     ? frontendUrlString.split(',').map(url => url.trim()).filter(Boolean)
     : ['http://localhost:3000', 'http://localhost:3001'] // дефолтные значения для разработки
@@ -57,7 +57,6 @@ const frontendUrls = frontendUrlString
 // Логируем настройки CORS при старте (только для отладки, можно убрать в продакшене)
 if (process.env.NODE_ENV !== 'production') {
     console.log('CORS configuration:');
-    console.log('FRONTEND_URL from env:', process.env.FRONTEND_URL);
     console.log('CORS_ORIGIN from env:', process.env.CORS_ORIGIN);
     console.log('Parsed allowed origins:', frontendUrls);
 }
