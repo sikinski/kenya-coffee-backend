@@ -6,29 +6,34 @@ services:
     build: .
     ports:
       - "3002:3002"
+    env_file:
+      - .env
     environment:
       # Порт сервера
       PORT: 3002
       HOST: 0.0.0.0
-      # База данных - собираем DATABASE_URL из переменных
+      # База данных - используем переменные из .env
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
       # JWT секреты
       ACCESS_SECRET: ${ACCESS_SECRET}
       REFRESH_SECRET: ${REFRESH_SECRET}
-      # Другие переменные окружения (если есть)
+      # Другие переменные окружения
       AQSI_URL: ${AQSI_URL:-}
       AQSI_KEY: ${AQSI_KEY:-}
-      # Фронтенды через запятую: используем CORS_ORIGIN из .env, если есть, иначе объединяем FRONTEND_URL и ADMIN_URL
-      # Если в .env есть CORS_ORIGIN, он будет использован, иначе будет объединение FRONTEND_URL и ADMIN_URL
-      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL:-http://localhost:3000},${ADMIN_URL:-http://localhost:3001}}
+      # CORS - используем CORS_ORIGIN из .env, если есть, иначе объединяем FRONTEND_URL и ADMIN_URL
+      # В .env укажите: CORS_ORIGIN=https://kenya-coffee.ru,https://admin.kenya-coffee.ru
+      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL:-https://kenya-coffee.ru},${ADMIN_URL:-https://admin.kenya-coffee.ru}}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   db:
     image: postgres:15
     container_name: kenya_coffee_backend_db
     restart: always
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
