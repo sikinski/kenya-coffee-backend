@@ -18,10 +18,9 @@ services:
       # Другие переменные окружения (если есть)
       AQSI_URL: ${AQSI_URL:-}
       AQSI_KEY: ${AQSI_KEY:-}
-      # Фронтенды через запятую: используем CORS_ORIGIN из .env, если есть, иначе FRONTEND_URL
-      # В .env можно указать: CORS_ORIGIN=https://kenya-coffee.ru,https://admin.kenya-coffee.ru
-      # Или: FRONTEND_URL=https://kenya-coffee.ru,https://admin.kenya-coffee.ru
-      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL:-http://localhost:3000,http://localhost:3001}}
+      # Фронтенды через запятую: используем CORS_ORIGIN из .env, если есть, иначе объединяем FRONTEND_URL и ADMIN_URL
+      # Если в .env есть CORS_ORIGIN, он будет использован, иначе будет объединение FRONTEND_URL и ADMIN_URL
+      FRONTEND_URL: ${CORS_ORIGIN:-${FRONTEND_URL:-http://localhost:3000},${ADMIN_URL:-http://localhost:3001}}
     depends_on:
       - db
     restart: unless-stopped
