@@ -86,11 +86,7 @@ await fastify.register(cors, {
 });
 
 // Регистрируем multipart для загрузки файлов
-await fastify.register(multipart, {
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB максимум
-    }
-});
+await fastify.register(multipart);
 
 // Статическая раздача файлов из uploads
 const __filename = fileURLToPath(import.meta.url);
